@@ -1,11 +1,15 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.mail import send_mail
+from django.conf import settings
 
 from users import constants as c
 
+
+Users = get_user_model()
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
@@ -19,6 +23,8 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=c.LEN_USERNAME,
         unique=True,
+        null=False,
+        blank=False,
         help_text=(
             'Обязательное поле. Не более 150 символов. '
             'Можно использовать буквы, цифры и спецсимволы: @/./+/-/_'
@@ -39,6 +45,8 @@ class User(AbstractUser):
     )
     email = models.EmailField(
         max_length=c.LEN_EMAIL,
+        null=False,
+        blank=False,
         unique=True,
         verbose_name='E-mail')
     is_staff = models.BooleanField(
@@ -61,14 +69,14 @@ class User(AbstractUser):
         verbose_name='Аватар'
     )
     subscriptions = models.ManyToManyField(
-        'Users',
+        settings.AUTH_USER_MODEL,
         symmetrical=False,
         related_name='subscribers',
         blank=True,
         verbose_name='Подписки'
     )
     cart = models.OneToOneField(
-        'Cart',
+        'cart.Cart',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -76,7 +84,7 @@ class User(AbstractUser):
         verbose_name='Корзина'
     )
     favourites = models.ManyToManyField(
-        'Recipe',
+        'recipe.Recipe',
         blank=True,
         related_name='favorited_by',
         verbose_name='Избранное'
@@ -84,7 +92,7 @@ class User(AbstractUser):
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     def __str__(self):
         return self.username
