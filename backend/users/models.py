@@ -46,23 +46,24 @@ class User(AbstractUser):
     )
     date_joined = models.DateTimeField('Дата посещения', default=timezone.now)
     avatar = models.ImageField(
-        'Аватар',
         upload_to='users/avatars/',
         blank=True,
-        null=True
+        null=True,
+        verbose_name='Аватар'
     )
     subscriptions = models.ManyToManyField(
-        'Подписки',
+        'Users',
         symmetrical=False,
         related_name='subscribers',
-        blank=True
+        blank=True,
+        verbose_name='Подписки'
     )
-    cart = models.ForeignKey(
+    cart = models.OneToOneField(
         'Cart',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='user_cart',
+        related_name='owner',
         verbose_name='Корзина'
     )
     favourites = models.ManyToManyField(
@@ -98,12 +99,12 @@ class User(AbstractUser):
         """Отправка письма пользователю."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
-    @property
-    def is_subscribed(self):
+    @classmethod
+    def is_subscribed(cls):
         pass
 
-    @property
-    def is_favorite(self):
+    @classmethod
+    def is_favorite(cls):
         pass
 
     @classmethod
