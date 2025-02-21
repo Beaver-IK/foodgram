@@ -17,7 +17,6 @@ class User(AbstractUser):
     username_validator = UnicodeUsernameValidator()
 
     username = models.CharField(
-        'Имя пользователя',
         max_length=c.LEN_USERNAME,
         unique=True,
         help_text=(
@@ -28,21 +27,31 @@ class User(AbstractUser):
         error_messages=dict(
             unique='Пользователь с таким именем пользователя уже существует.'
         ),
+        verbose_name='Имя пользователя'
     )
-    first_name = models.CharField('Имя', max_length=c.LEN_FIRSTNAME,)
-    last_name = models.CharField('Фамилия', max_length=c.LEN_LASTNAME)
-    email = models.EmailField('Email', max_length=c.LEN_EMAIL, unique=True)
+    first_name = models.CharField(
+        max_length=c.LEN_FIRSTNAME,
+        verbose_name='Имя'
+    )
+    last_name = models.CharField(
+        max_length=c.LEN_LASTNAME,
+        verbose_name='Фамилия'
+    )
+    email = models.EmailField(
+        max_length=c.LEN_EMAIL,
+        unique=True,
+        verbose_name='E-mail')
     is_staff = models.BooleanField(
-        'Сотрудник организации',
         default=False,
         help_text='Определяет, может ли пользоваться админкой.',
+        verbose_name='Сотрудник организаци'
     )
     is_active = models.BooleanField(
-        'Активен',
         default=True,
         help_text=(
             'Вместо удадения пользователя, можно его сделать неактивным.'
         ),
+        verbose_name='Активен'
     )
     date_joined = models.DateTimeField('Дата посещения', default=timezone.now)
     avatar = models.ImageField(
