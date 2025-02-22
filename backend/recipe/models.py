@@ -22,19 +22,21 @@ class Recipe(models.Model):
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=False,
         blank=False,
         verbose_name='Автор рецепта'
     )
     ingredients = models.ManyToManyField(
         'ingredient.Ingredient',
+        through='ingredient.RecipeIngredient',
         null=False,
         blank=False,
         verbose_name='Ингредиенты'
     )
-    tags = models.ForeignKey(
+    tag = models.ForeignKey(
         'Tag',
+        on_delete=models.CASCADE,
         null=False,
         blank=False,
         verbose_name='Хештег'

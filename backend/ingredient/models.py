@@ -32,6 +32,25 @@ class Ingredient(models.Model):
     )
     
     measurement_unit = models.CharField(
+        max_length=c.LEN_UNIT_NAME,
         choices=Units.choices,
         default=Units.GRAM
+    )
+
+class RecipeIngredient(models.Model):
+    """Промежуточная модель между рецептом
+    и ингридиентами с количеством ингридиентов.
+    """
+    
+    recipe = models.ForeignKey(
+        'recipe.Recipe',
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        'Ingredient',
+        on_delete=models.CASCADE
+    )
+    quantity = models.DecimalField(
+        max_digits=c.MAX_QUANTITY,
+        decimal_places=1
     )
