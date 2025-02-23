@@ -6,6 +6,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from users import constants as c
+from users.validators import NotMeValidator
+from users.managers import CastomManager
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
@@ -13,8 +15,6 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-
-    username_validator = UnicodeUsernameValidator()
 
     username = models.CharField(
         max_length=c.LEN_USERNAME,
@@ -25,7 +25,7 @@ class User(AbstractUser):
             'Обязательное поле. Не более 150 символов. '
             'Можно использовать буквы, цифры и спецсимволы: @/./+/-/_'
         ),
-        validators=[username_validator],
+        validators=[UnicodeUsernameValidator, NotMeValidator],
         error_messages=dict(
             unique='Пользователь с таким именем пользователя уже существует.'
         ),
@@ -85,10 +85,12 @@ class User(AbstractUser):
         related_name='favorited_by',
         verbose_name='Избранное'
     )
+    
+    objects = CastomManager()
 
     EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     def __str__(self):
         return self.username
@@ -97,20 +99,12 @@ class User(AbstractUser):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
 
-    def get_full_name(self):
-        """
-        Возвращает строку с именем и фамилией.
-        """
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
-
-    def get_short_name(self):
-        """Возвращает только имя."""
-        return self.first_name
-
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Отправка письма пользователю."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def set_password(self, raw_password):
+        return super().set_password(raw_password)
 
     @classmethod
     def is_subscribed(cls):

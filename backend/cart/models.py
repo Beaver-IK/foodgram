@@ -6,6 +6,5 @@ class Cart(models.Model):
     
     recipes = models.ManyToManyField(
         'recipe.Recipe',
-        null=True,
         blank=True
     )
