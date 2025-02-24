@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-v6i8bu(i58d@9gl8kk@b=c-^=*nl$+)-$rai9s6q-l5$^q7(s4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -139,7 +139,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', 
+        'rest_framework.permissions.AllowAny', 
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 6,
 }
 
 
@@ -166,13 +166,6 @@ DJOSER = {
     'USER_CREATE_PASSWORD_RETYPE': False,
     'SET_PASSWORD_RETYPE': True,
     'SERIALIZERS': {
-        'user_create': 'users.for_api.serializers.UserCreateSerializer',
-        'user': 'users.for_api.serializers.UserSerializer',
-        'current_user': 'users.for_api.serializers.CurrentUserSerializer',
-    },
-    'PERMISSIONS': {
-        'user': ['api.permissions.ReadOnly'],
-        'user_list': ['api.permissions.ReadOnly'],
-        'current_user': ['api.permissions.IsOwnerAndReadOnly'],
+        'set_password': 'djoser.serializers.SetPasswordSerializer'
     },
 }

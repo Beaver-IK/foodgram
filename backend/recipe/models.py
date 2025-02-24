@@ -12,6 +12,7 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         default_related_name = 'recipes'
+        ordering = ['-pub_date', 'name']
     
     name = models.CharField(
         max_length=c.LEN_RECIPE_NAME,
@@ -33,10 +34,8 @@ class Recipe(models.Model):
         blank=False,
         verbose_name='Ингредиенты'
     )
-    tag = models.ForeignKey(
+    tag = models.ManyToManyField(
         'Tag',
-        on_delete=models.CASCADE,
-        null=False,
         blank=False,
         verbose_name='Хештег'
     )
@@ -64,6 +63,11 @@ class Recipe(models.Model):
         help_text='Прохождение модерации',
         verbose_name='Активен'
     )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        verbose_name='Дата добавления',
+    )
 
     def __str__(self):
         return self.name
@@ -71,10 +75,6 @@ class Recipe(models.Model):
     @property
     def short_link(self):
         """Метод возвращает ссылку на рецепт."""
-
-    @property
-    def rating(self):
-        """Расчет рейтинга исходя из количества добавлений в избранное."""
 
 
 class Tag(models.Model):
@@ -84,6 +84,7 @@ class Tag(models.Model):
         
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        default_related_name = 'tags'
 
     name = models.CharField(
         max_length=c.LEN_TAG_NAME,
@@ -98,3 +99,6 @@ class Tag(models.Model):
         null=False,
         verbose_name='Слаг'
     )
+
+    def __str__(self):
+        return self.slug
