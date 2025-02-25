@@ -27,3 +27,13 @@ class IsAuthenticated(BasePermission):
                 detail='Учетные данные не были предоставлены.',
                 code=status.HTTP_401_UNAUTHORIZED)
         return True
+
+class IsProfileOwner(BasePermission):
+    """Провяет, является ли пользователь владельцем профиля."""
+
+    def has_object_permission(self, request, view, obj):
+        if request.user != obj:
+            raise AuthenticationFailed(
+                detail='Учетные данные не были предоставлены.',
+                code=status.HTTP_401_UNAUTHORIZED)
+        return True

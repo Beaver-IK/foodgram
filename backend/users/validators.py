@@ -1,4 +1,5 @@
 from django.utils.deconstruct import deconstructible
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 
 

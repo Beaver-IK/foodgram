@@ -1,25 +1,23 @@
 from django.contrib.auth import get_user_model
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, viewsets, pagination
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
-from rest_framework import generics, viewsets
+from rest_framework import viewsets
 from rest_framework.response import Response
 from djoser.serializers import SetPasswordSerializer
 
-from api.permissions import IsAuthenticated
+from api.permissions import IsAuthenticated, IsProfileOwner
 from api.users.serializers import UserSerializer, AvatarSerializer
 
 Users = get_user_model()
 
-class UsersViewSet(viewsets.ModelViewSet,
-                generics.ListAPIView,
-                generics.RetrieveAPIView,
-                generics.CreateAPIView):
+class UsersViewSet(viewsets.ModelViewSet):
     """Вьюсет для презентации и регистрации пользователей.
-    Отдает:
-    Список пользователей.
-    Пользователя по id.
-    Регистрирует пользователя.
+    Показывает список пользователей. [AllowAny]
+    Показывает пользователя по id. [AllowAny]
+    Регистрирует нового пользователя. [AllowAny]
+    Показывает собственный профиль. [IsAuthenticated]
+    Добавляет и удаляет собственный аватар пользователя. [IsAuthenticated]
     """
 
     queryset = Users.objects.all()
@@ -28,12 +26,14 @@ class UsersViewSet(viewsets.ModelViewSet,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('$username',)
     http_method_name = ['get', 'post']
+    pagination_class = pagination.LimitOffsetPagination
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(
             data=request.data, context={'is_registration': True}
         )
         if serializer.is_valid(raise_exception=True):
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
@@ -49,7 +49,9 @@ class UsersViewSet(viewsets.ModelViewSet,
     @action(
         methods=['put', 'delete'],
         detail=False,
-        permission_classes=[IsAuthenticated],
+        permission_classes=[
+            IsAuthenticated,
+            IsProfileOwner],
         url_path='me/avatar'
     )
     def get_avatar(self, request):

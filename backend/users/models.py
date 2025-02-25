@@ -1,9 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.validators import RegexValidator
 
 from users import constants as c
 from users.validators import NotMeValidator
@@ -25,7 +25,14 @@ class User(AbstractUser):
             'Обязательное поле. Не более 150 символов. '
             'Можно использовать буквы, цифры и спецсимволы: @/./+/-/_'
         ),
-        validators=[UnicodeUsernameValidator, NotMeValidator],
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Некорректный username',
+                code='invalid_username',
+            ),
+            NotMeValidator
+        ],
         error_messages=dict(
             unique='Пользователь с таким именем пользователя уже существует.'
         ),
@@ -62,7 +69,8 @@ class User(AbstractUser):
         upload_to='users/avatars/',
         blank=True,
         null=True,
-        verbose_name='Аватар'
+        verbose_name='Аватар',
+        help_text=f'Не более {c.MAX_FILE_SIZE / (1024 * 1024)} Мб'
     )
     subscriptions = models.ManyToManyField(
         settings.AUTH_USER_MODEL,

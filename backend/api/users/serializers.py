@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import FileExtensionValidator
 
 
 from users.constants import LEN_USERNAME
+from django.core.validators import RegexValidator
 from users.validators import NotMeValidator
 from api.validators import PhotoValidator
 from api.users.utils import already_use
@@ -18,7 +18,13 @@ class UserSerializer(serializers.ModelSerializer):
     
     username = serializers.CharField(
         max_length=LEN_USERNAME,
-        validators=[NotMeValidator, UnicodeUsernameValidator]
+        validators=[NotMeValidator,
+                    RegexValidator(
+                        regex=r'^[\w.@+-]+\Z',
+                        message='Некорректный username',
+                        code='invalid_username',
+                    ),
+        ]
     )
     password = serializers.CharField(write_only=True)
     is_subscribed = serializers.SerializerMethodField()
@@ -26,14 +32,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email',
             'id',
             'username',
             'first_name',
             'last_name',
             'is_subscribed',
             'avatar',
-            'password',)
+            'password',
+            'email',)
+        read_only_fields = ('id',)
     
     def get_is_subscribed(self, obj):
 
@@ -46,25 +53,26 @@ class UserSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         return already_use(attrs)
+        
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if self.context.get('is_registration'):
             data.pop('is_subscribed', None)
+            data.pop('avatar', None)
         return data
     
 class AvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(
         required=True,
         validators=[
-            PhotoValidator(size=c.MAX_FILE_SIZE, ext_s=c.ALLOW_EXT),
+            PhotoValidator(size=c.MAX_FILE_SIZE),
             FileExtensionValidator(allowed_extensions=c.ALLOW_EXT)
         ]
     )
     
     def update(self, instance, validated_data):
-        # Передаем имя пользователя в контекст для генерации имени файла
-        username = instance.username  # Используем текущее имя пользователя
+        username = instance.username
         avatar = validated_data.get('avatar')
 
         if avatar is not None:
