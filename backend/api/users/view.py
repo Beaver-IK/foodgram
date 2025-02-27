@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from rest_framework import filters, status, viewsets, pagination
+from rest_framework import filters, status, pagination
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
-from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from djoser.serializers import SetPasswordSerializer
 
@@ -11,7 +11,7 @@ from api.users.serializers import UserSerializer, AvatarSerializer
 
 Users = get_user_model()
 
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersViewSet(ModelViewSet):
     """Вьюсет для презентации и регистрации пользователей.
     Показывает список пользователей. [AllowAny]
     Показывает пользователя по id. [AllowAny]

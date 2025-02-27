@@ -50,7 +50,7 @@ class RecipeIngredient(models.Model):
         'Ingredient',
         on_delete=models.CASCADE
     )
-    quantity = models.DecimalField(
+    amount = models.DecimalField(
         max_digits=c.MAX_QUANTITY,
         decimal_places=1
     )

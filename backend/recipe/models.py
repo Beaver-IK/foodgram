@@ -34,10 +34,10 @@ class Recipe(models.Model):
         blank=False,
         verbose_name='Ингредиенты'
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         'Tag',
         blank=False,
-        verbose_name='Хештег'
+        verbose_name='Теги'
     )
     image = models.ImageField(
         upload_to='recipes/foto/',
