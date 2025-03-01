@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 
 from recipe import constants as c
+from recipe.managers import RecipeManager
 
 
 class Recipe(models.Model):
@@ -59,7 +60,7 @@ class Recipe(models.Model):
         verbose_name='Время приготовления'
     )
     is_active = models.BooleanField(
-        default=False,
+        default=True,
         help_text='Прохождение модерации',
         verbose_name='Активен'
     )
@@ -68,6 +69,8 @@ class Recipe(models.Model):
         db_index=True,
         verbose_name='Дата добавления',
     )
+    
+    objects = RecipeManager()
 
     def __str__(self):
         return self.name

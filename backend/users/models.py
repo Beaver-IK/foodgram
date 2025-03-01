@@ -7,7 +7,7 @@ from django.core.validators import RegexValidator
 
 from users import constants as c
 from users.validators import NotMeValidator
-from users.managers import CastomManager
+from users.managers import CustomManager
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
@@ -94,7 +94,7 @@ class User(AbstractUser):
         verbose_name='Избранное'
     )
     
-    objects = CastomManager()
+    objects = CustomManager()
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'

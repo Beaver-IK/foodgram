@@ -3,6 +3,25 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
 
 
+class IsAuthOrOwnerOrRead(BasePermission):
+    """Пермишен для рецепта, разрешающий:
+    Безопасные методы.
+    Создание объектов, только авторизованному пользователю.
+    Удаление и редактирование объектов только владельцу объекта.
+    """
+    
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method == 'POST':
+            return request.user.is_authenticated
+        return False
+        
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return request.user == obj.author
+
 class IsOwnerAndReadOnly(BasePermission):
     """Пермишен, который разрешает только чтение для владельца объекта."""
     
@@ -11,12 +30,6 @@ class IsOwnerAndReadOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.method in SAFE_METHODS and obj == request.user
-
-class ReadOnly(BasePermission):
-    """Пермишен, разрешающий только чтение."""
-    
-    def has_permission(self, request, view):
-        return request.method in SAFE_METHODS
 
 class IsAuthenticated(BasePermission):
     """Проверяет, что пользователь аутентифицирован."""

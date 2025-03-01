@@ -3,7 +3,7 @@ from django.contrib.auth.models import UserManager
 from cart.models import Cart
 
 
-class CastomManager(UserManager):
+class CustomManager(UserManager):
     """Менеджер с переопределением метода create."""
     
     def create_user(self, username, email, password, **extra_fields):

@@ -5,9 +5,10 @@ from rest_framework import serializers
 class Base64ImageField(serializers.ImageField):
     """Поле для обработки Base64-изображений."""
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name='None', *args, **kwargs):
         self.default_error_messages['required'] = 'Обязательное поле'
         self.default_error_messages['invalid'] = 'Пустое значение'
+        self.name = name
         super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
@@ -19,6 +20,6 @@ class Base64ImageField(serializers.ImageField):
             except Exception as e:
                 raise serializers.ValidationError(
                     f'Ошибка декодирования Base64: {e}')
-            file_name = f'_avatar.{ext}'
+            file_name = f'_{self.name}.{ext}'
             data = ContentFile(decoded_image, name=file_name)
         return super().to_internal_value(data)

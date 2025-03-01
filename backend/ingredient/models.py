@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 from ingredient import constants as c
 
@@ -42,15 +43,25 @@ class RecipeIngredient(models.Model):
     и ингридиентами с количеством ингридиентов.
     """
     
+    class Meta:
+        verbose_name = 'Ингредиент рецепта'
+        verbose_name_plural = 'Ингредиенты рецепта'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_ingredient',
+            )
+        ]
+    
     recipe = models.ForeignKey(
         'recipe.Recipe',
         on_delete=models.CASCADE
     )
     ingredient = models.ForeignKey(
-        'Ingredient',
+        'ingredient.Ingredient',
         on_delete=models.CASCADE
     )
-    amount = models.DecimalField(
-        max_digits=c.MAX_QUANTITY,
-        decimal_places=1
-    )
+    amount = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text='Укажите количество',
+        verbose_name='Общее количество')

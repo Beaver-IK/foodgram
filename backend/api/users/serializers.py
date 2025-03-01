@@ -64,6 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
     
 class AvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(
+        name='avatar',
         required=True,
         validators=[
             PhotoValidator(size=c.MAX_FILE_SIZE),
@@ -73,9 +74,10 @@ class AvatarSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         username = instance.username
+        print(instance)
         avatar = validated_data.get('avatar')
 
-        if avatar is not None:
+        if avatar: # is not None:
             instance.avatar = self.fields['avatar'].run_validation(avatar)
         instance.avatar.name = f'{username}{instance.avatar.name}'
         instance.save()
