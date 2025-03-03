@@ -1,17 +1,15 @@
 from rest_framework import serializers
 from django.core.validators import FileExtensionValidator
-from django.core.validators import MinValueValidator
-from django.shortcuts import get_object_or_404
-from django.db import transaction
 
 from api.validators import PhotoValidator
+from django.core.files.base import ContentFile
 from api.fields import Base64ImageField
 from api.users.serializers import UserSerializer
-from ingredient.models import RecipeIngredient, Ingredient
+from ingredient.models import RecipeIngredient
 from recipe.models import Tag, Recipe
+from api.validators import RecipeDataValidator
+from rest_framework.serializers import ValidationError
 from api import constants as c
-
-from users.models import User
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для Тегов."""
@@ -19,7 +17,7 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'slug',)
 
-class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
+class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для создания связей между рецептом и ингредиентами."""
     
     id = serializers.IntegerField(read_only=True, source='ingredient.id')
@@ -72,22 +70,37 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return user.cart.recipes.filter(id=obj.id).exists()
     
-    def create(self, validated_data):
-        """Метод для создания нового рецепта."""
-        self.initial_data['author'] = self.context.get('request').user
-        image = self.fields['image'].run_validation(
+ ##########################################################   
+    def validate(self, attrs):
+        attrs['ingredients'] = self.initial_data.get('ingredients')
+        attrs['author'] = self.context.get('request').user
+        attrs['image'] = self.fields['image'].run_validation(
             self.initial_data['image']
         )
-        image.name = f'{self.initial_data["author"]}{image.name}'
-        self.initial_data['image'] = image
-        data = self.initial_data
-        recipe = Recipe.objects.create(data)
-
+        attrs['image'].name = (
+            f'{attrs["author"]}{attrs["image"].name}'
+        )
+        attrs['request'] = self.context.get('request')
+        validator = RecipeDataValidator(data=attrs)
+        validator()
+        return attrs
+ ##########################################################   
+    def create(self, validated_data):
+        """Cоздание нового рецепта."""
+        try:
+            recipe = Recipe.objects.create(validated_data)
+        except Exception as e:
+            raise serializers.ValidationError(
+                f'Ошибка {e}'
+            )
         return recipe
+    
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['tags'] = TagSerializer(instance.tags, many=True).data
-        representation['ingredients'] = RecipeIngredientCreateSerializer(
+        representation['ingredients'] = RecipeIngredientSerializer(
             instance.recipe_ingredients, many=True).data
         return representation

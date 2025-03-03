@@ -14,6 +14,13 @@ class RecipeManager(models.Manager):
         from recipe.models import Tag
         from ingredient.models import RecipeIngredient
         from ingredient.models import Ingredient
+        from api.models import RecipeShortLink
+        
+        from api.validators import RecipeDataValidator
+        
+        validator = RecipeDataValidator(data=data)
+        validator()
+        
         
         name = data.get('name')
         author = data.get('author')
@@ -22,27 +29,8 @@ class RecipeManager(models.Manager):
         image = data.get('image')
         text = data.get('text')
         cooking_time = data.get('cooking_time')
+        request = data.get('request')
         
-        if not name:
-            raise ValidationError(
-                {'name': 'Необходимо указать название рецепта'}
-            )
-        if not author:
-            raise ValidationError({'author': 'У рецепта должен быть автор'})
-        if not ingredients_data:
-            raise ValidationError(
-                {'ingredients_data': 'Нужны ингредиенты'}
-            )
-        if not tags_data:
-            raise ValidationError({'tags_data':'Нужны теги'})
-        if not image:
-            raise ValidationError({'image': 'Нужна фотография блюда'})
-        if not text:
-            raise ValidationError({'text': 'Добавьте описание рецепта'})
-        if not cooking_time:
-            raise ValidationError(
-                {'cooking_time': 'Добавьте время приготовления'}
-            )
         with transaction.atomic():
             recipe = self.model(
                 name=name,
@@ -52,10 +40,10 @@ class RecipeManager(models.Manager):
                 cooking_time=cooking_time
             )
             recipe.save()
+            
             for value in ingredients_data:
                 ingredient_id = value.get('id')
                 amount = value.get('amount')
-                
                 if not ingredient_id or not amount:
                     raise ValidationError(
                         'Для каждого ингрединта должен быть указан '
@@ -74,7 +62,18 @@ class RecipeManager(models.Manager):
                     raise ValidationError('Есть несуществующие теги')
             elif all(isinstance(tag, Tag) for tag in tags_data):
                 tags = tags_data
-            
             recipe.tags.set(tags)
             
+            original_url = (
+                f'{request.scheme}'
+                f'://{request.get_host()}/api/recipes/{recipe.id}'
+            )
+            short_link = RecipeShortLink.objects.create(
+                recipe=recipe,
+                original_url=original_url,
+                )
+            short_link.save()
+            
             return recipe
+        
+    

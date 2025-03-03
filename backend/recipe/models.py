@@ -54,7 +54,7 @@ class Recipe(models.Model):
         verbose_name='Описание'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1)],
+        validators=[MinValueValidator(c.MIN_COOKING_TIME)],
         blank=False,
         null=False,
         help_text='Время приготовления в минутах.',
@@ -62,7 +62,7 @@ class Recipe(models.Model):
     )
     is_active = models.BooleanField(
         default=True,
-        help_text='Прохождение модерации',
+        help_text='Модерация',
         verbose_name='Активен'
     )
     pub_date = models.DateTimeField(
@@ -75,10 +75,6 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
-
-    @property
-    def short_link(self):
-        """Метод возвращает ссылку на рецепт."""
 
 
 class Tag(models.Model):

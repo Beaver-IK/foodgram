@@ -1,13 +1,16 @@
 from rest_framework.viewsets import GenericViewSet, mixins, ModelViewSet
 from recipe.models import Tag, Recipe
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from rest_framework import status
 
 from api.filters import RecipeFilter
 from api.permissions import IsAuthOrOwnerOrRead
 from api.recipe.serializers import TagSerializer, RecipeSerializer
+from api.models import RecipeShortLink
 
 
 class TagViewSet(GenericViewSet, 
@@ -38,9 +41,20 @@ class RecipeVievSet(ModelViewSet):
     
     @action(
         methods=['get'],
-        detail=False,
+        detail=True,
         permission_classes=[AllowAny],
         url_path='get-link'
     )
-    def get_link(self):
-        pass
+    def get_link(self, request, pk=None):
+        recipe = self.get_object()
+        original_url = (
+            f'{request.scheme}'
+            f'://{request.get_host()}/api/recipes/{recipe.id}'
+        )
+        link, create = RecipeShortLink.objects.get_or_create(recipe=recipe, original_url=original_url)
+        if create:
+            link.save()
+        short_link = link.get_short_url(request)
+        return Response(
+            {'short-link': f'{short_link}'}, status=status.HTTP_200_OK
+        )

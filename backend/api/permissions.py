@@ -13,14 +13,14 @@ class IsAuthOrOwnerOrRead(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        elif request.method == 'POST':
+        elif request.method == 'POST' or request.method == 'PATCH':
             return request.user.is_authenticated
         return False
         
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
-        return request.user == obj.author
+        return request.user == obj.author and request.method == 'PATCH'
 
 class IsOwnerAndReadOnly(BasePermission):
     """Пермишен, который разрешает только чтение для владельца объекта."""
