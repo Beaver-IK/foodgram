@@ -17,6 +17,7 @@ class Recipe(models.Model):
     
     name = models.CharField(
         max_length=c.LEN_RECIPE_NAME,
+        unique=False,
         blank=False,
         null=False,
         help_text='Не более 254 символов',
@@ -32,18 +33,18 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         'ingredient.Ingredient',
         through='ingredient.RecipeIngredient',
-        blank=False,
+        blank=True,
         verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         'Tag',
-        blank=False,
+        blank=True,
         verbose_name='Теги'
     )
     image = models.ImageField(
         upload_to='recipes/foto/',
         blank=False,
-        null=False,
+        null=True,
         verbose_name='Фото рецепта'
     )
     text = models.TextField(

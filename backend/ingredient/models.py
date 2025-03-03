@@ -52,6 +52,7 @@ class RecipeIngredient(models.Model):
                 name='unique_ingredient',
             )
         ]
+        default_related_name = 'recipe_ingredients'
     
     recipe = models.ForeignKey(
         'recipe.Recipe',

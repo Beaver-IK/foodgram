@@ -77,7 +77,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         print(instance)
         avatar = validated_data.get('avatar')
 
-        if avatar: # is not None:
+        if avatar:
             instance.avatar = self.fields['avatar'].run_validation(avatar)
         instance.avatar.name = f'{username}{instance.avatar.name}'
         instance.save()

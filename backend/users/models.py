@@ -82,8 +82,8 @@ class User(AbstractUser):
     cart = models.OneToOneField(
         'cart.Cart',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         related_name='owner',
         verbose_name='Корзина'
     )
