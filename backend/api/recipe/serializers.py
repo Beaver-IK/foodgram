@@ -9,6 +9,7 @@ from ingredient.models import RecipeIngredient
 from recipe.models import Tag, Recipe
 from api.validators import RecipeDataValidator
 from rest_framework.serializers import ValidationError
+from ingredient.models import Ingredient
 from api import constants as c
 
 class TagSerializer(serializers.ModelSerializer):
@@ -69,8 +70,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if user.is_anonymous:
             return False
         return user.cart.recipes.filter(id=obj.id).exists()
-    
- ##########################################################   
+ 
     def validate(self, attrs):
         attrs['ingredients'] = self.initial_data.get('ingredients')
         attrs['author'] = self.context.get('request').user
@@ -84,20 +84,58 @@ class RecipeSerializer(serializers.ModelSerializer):
         validator = RecipeDataValidator(data=attrs)
         validator()
         return attrs
- ##########################################################   
+
     def create(self, validated_data):
         """Cоздание нового рецепта."""
         try:
             recipe = Recipe.objects.create(validated_data)
         except Exception as e:
             raise serializers.ValidationError(
-                f'Ошибка {e}'
+                f'Ошибка: {e}'
             )
         return recipe
     
-    def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
+    def update(self, instance: Recipe, validated_data):
+        instance.name = validated_data.get(
+            'name',
+            instance.name
+        )
+        instance.text = validated_data.get(
+            'text',
+            instance.text
+        )
+        instance.cooking_time = validated_data.get(
+            'cooking_time',
+            instance.cooking_time
+        )
+        instance.image = validated_data.get(
+            'image',
+            instance.image
+        )
+        instance.save()
+        tags_data = validated_data.pop('tags', None)
+        if tags_data:
+            instance.tags.set(tags_data)
+        ingredients_data = validated_data.pop('tags', None)
+        if ingredients_data:
+            self._update_recipeingredients(instance, ingredients_data)
+            
+        return instance
     
+    def _update_recipeingredients(self, recipe, ingredients_data):
+        """Метод для обновления данных в связанной модели RecipeIngredient."""
+        
+        RecipeIngredient.objects.filter(recipe=recipe).delete()
+        
+        for values in ingredients_data:
+            ingredient = Ingredient.objects.get(id=values.get('id'))
+            amount = values.get('amount')
+            Recipe.objects.create(
+                recipe=recipe,
+                ingredient=ingredient,
+                amount=amount
+            )
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['tags'] = TagSerializer(instance.tags, many=True).data
