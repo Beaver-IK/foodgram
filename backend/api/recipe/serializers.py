@@ -2,13 +2,11 @@ from rest_framework import serializers
 from django.core.validators import FileExtensionValidator
 
 from api.validators import PhotoValidator
-from django.core.files.base import ContentFile
 from api.fields import Base64ImageField
 from api.users.serializers import UserSerializer
 from ingredient.models import RecipeIngredient
 from recipe.models import Tag, Recipe
 from api.validators import RecipeDataValidator
-from rest_framework.serializers import ValidationError
 from ingredient.models import Ingredient
 from api import constants as c
 
@@ -23,7 +21,10 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     
     id = serializers.IntegerField(read_only=True, source='ingredient.id')
     name = serializers.CharField(read_only=True, source='ingredient.name')
-    measurement_unit = serializers.CharField(read_only=True, source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(
+        read_only=True,
+        source='ingredient.measurement_unit'
+    )
     
     class Meta:
         model = RecipeIngredient
@@ -142,3 +143,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         representation['ingredients'] = RecipeIngredientSerializer(
             instance.recipe_ingredients, many=True).data
         return representation
+
+
+class RecipeStripSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )

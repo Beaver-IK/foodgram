@@ -30,12 +30,12 @@ class Command(BaseCommand):
                             measurement_unit=measurement_unit
                         )
                         ingredient.save()
-                        self.stdout.write(self.style.SUCCESS(f"Добавлен ингредиент: {name}"))
+                        self.stdout.write(self.style.SUCCESS(f'Добавлен ингредиент: {name}'))
                     except Exception as e:
-                        self.stderr.write(f"Ошибка при добавлении ингредиента {name}: {e}")
+                        self.stderr.write(f'Ошибка при добавлении ингредиента {name}: {e}')
                 else:
-                    self.stdout.write(f"Ингредиент '{name}' уже существует в базе данных.")
+                    self.stdout.write(f'Ингредиент "{name}" уже существует в базе данных.')
         except FileNotFoundError:
-            self.stderr.write(f"Файл не найден: {file_path}")
+            self.stderr.write(f'Файл не найден: {file_path}')
         except json.JSONDecodeError:
-            self.stderr.write("Ошибка декодирования JSON файла.")
+            self.stderr.write('Ошибка декодирования JSON файла.')

@@ -9,6 +9,8 @@ from djoser.serializers import SetPasswordSerializer
 from api.permissions import IsAuthenticated, IsProfileOwner
 from api.users.serializers import UserSerializer, AvatarSerializer
 
+from users.models import User
+
 Users = get_user_model()
 
 class UsersViewSet(ModelViewSet):
@@ -82,3 +84,21 @@ class UsersViewSet(ModelViewSet):
         self.request.user.set_password(serializer.data['new_password'])
         self.request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(
+        methods=['get'],
+        detail=False,
+        permission_classes=[IsAuthenticated],
+        url_path='subscriptions'
+    )
+    def subscriptions(self, request):
+        recipes_limit = request.query_params.get('recipes_limit', None)
+        if recipes_limit:
+            recipes_limit = int(recipes_limit)
+        queryset = request.user.subscriptions.all()
+        print(queryset)
+        # user = User.objects.get(id=8)
+        # seet = user.recipes.all()[:recipes_limit]
+        page = self.paginate_queryset(queryset)
+        return Response('Huy', status=status.HTTP_200_OK)
+    
