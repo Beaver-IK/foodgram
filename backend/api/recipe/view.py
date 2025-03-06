@@ -14,7 +14,7 @@ from api.recipe.serializers import (TagSerializer,
                                     RecipeSerializer,
                                     RecipeStripSerializer)
 from api.models import RecipeShortLink
-from api.utils import OrderGenerator
+from api.utils import OrderGenerator, ResponseGenerator
 
 class TagViewSet(GenericViewSet, 
                  mixins.ListModelMixin, 
@@ -86,28 +86,13 @@ class RecipeVievSet(ModelViewSet):
         url_path='shopping_cart'
     )
     def add_delete_cart_recipes(self, request, pk=None):
-        recipe = self.get_object()
-        cart = request.user.cart
-        exists = cart.recipes.all().filter(id=recipe.id).exists()
-        if request.method == 'POST':
-            if not exists:
-                cart.recipes.add(recipe)
-                serializer = RecipeStripSerializer(recipe)
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
-            else:
-                return Response(
-                    'Рецепт уже добавлен', status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            if exists:
-                cart.recipes.remove(recipe)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(
-                    'Нет такого рецепта в корзине',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        response = ResponseGenerator(
+            obj=self.get_object(),
+            srh_obj=request.user.cart,
+            queryset=request.user.cart.recipes.all(),
+            req_method=request.method,
+        ).get_response()
+        return response
     
     @action(
         methods=['post', 'delete'],
@@ -116,27 +101,10 @@ class RecipeVievSet(ModelViewSet):
         url_path='favorite'
     )
     def favorites(self, request, pk=None):
-        recipe = self.get_object()
-        user = request.user
-        exists = user.favourites.all().filter(id=recipe.id).exists()
-        if request.method == 'POST':
-            if not exists:
-                user.favourites.add(recipe)
-                serializer = RecipeStripSerializer(recipe)
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
-            else:
-                return Response(
-                    'Рецепт уже в избранном',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            if exists:
-                if exists:
-                    user.favourites.remove(recipe)
-                    return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(
-                    'Нет такого рецепта в избранном',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        response = ResponseGenerator(
+            obj=self.get_object(),
+            srh_obj=request.user,
+            queryset=self.request.user.favourites.all(),
+            req_method=request.method, 
+        ).get_response()
+        return response

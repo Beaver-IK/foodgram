@@ -10,8 +10,6 @@ from django.core.files.base import ContentFile
 from recipe.models import Tag
 from recipe.constants import MIN_COOKING_TIME
 from rest_framework.request import Request
-from detoxify import Detoxify
-
 
 User = get_user_model()
 @deconstructible
@@ -50,16 +48,16 @@ class RecipeDataValidator:
         self.request = data.get('request', None)
     
     def __call__(self):
-        self.name_validation()
-        self.author_validator()
-        self.ingredients_validator()
-        self.tag_validator()
-        self.image_validator()
-        self.text_validator()
-        self.cooking_time_validator()
-        self.request_validator()
+        self._name_validation()
+        self._author_validator()
+        self._ingredients_validator()
+        self._tag_validator()
+        self._image_validator()
+        self._text_validator()
+        self._cooking_time_validator()
+        self._request_validator()
     
-    def name_validation(self):
+    def _name_validation(self):
         """"Валидация названия."""
         if not self.name:
             raise ValidationError(
@@ -70,7 +68,7 @@ class RecipeDataValidator:
                 {'name': 'Тип данных не соответвует ожидаемому "str"'}
             )
 
-    def author_validator(self):
+    def _author_validator(self):
         """Валидация автора."""
         if not self.author:
             raise ValidationError(
@@ -81,7 +79,7 @@ class RecipeDataValidator:
                 {'author': 'Тип данных не соответвует ожидаемому "User"'}
             )
 
-    def ingredients_validator(self):
+    def _ingredients_validator(self):
         """Валидация ингредиентов."""
 
         if not self.ingredients:
@@ -125,7 +123,7 @@ class RecipeDataValidator:
                 {'ingredients': 'Нельзя добавлять одинаковые ингредиенты'}
             )
     
-    def tag_validator(self):
+    def _tag_validator(self):
         """Валидатор Тегов."""
 
         if not self.tags_data:
@@ -146,7 +144,7 @@ class RecipeDataValidator:
                     {'tags': 'Тип данных не соответвует ожидаемому "Tag"'}
                 )
 
-    def image_validator(self):
+    def _image_validator(self):
         """Валидатор фотографии рецепта."""
 
         if self.request.method == 'PATCH':
@@ -160,7 +158,7 @@ class RecipeDataValidator:
                 {'image': 'Тип данных не соответвует ожидаемому "ContentFile"'}
             )
 
-    def text_validator(self):
+    def _text_validator(self):
         """валидатор описания."""
         if not self.text:
             raise ValidationError(
@@ -171,7 +169,7 @@ class RecipeDataValidator:
                 {'text': 'Тип данных не соответвует ожидаемому "str"'}
             )
 
-    def cooking_time_validator(self):
+    def _cooking_time_validator(self):
         """Валидатор времени приготовления."""
         if not self.cooking_time:
             raise ValidationError(
@@ -187,7 +185,8 @@ class RecipeDataValidator:
                                   f'не может быть меньше {MIN_COOKING_TIME}')}
             )
 
-    def request_validator(self):
+    def _request_validator(self):
+        """Проверка передачи запроса в контекст."""
         if not self.request:
             raise ValidationError(
                 {'request': 'Объект запроса не был передан в контекст'}
@@ -196,3 +195,4 @@ class RecipeDataValidator:
             raise ValidationError(
                 {'request': 'Тип данных не соответвует ожидаемому "Request"'}
             )
+        

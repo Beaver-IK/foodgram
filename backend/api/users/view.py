@@ -10,6 +10,8 @@ from api.permissions import IsAuthenticated, IsProfileOwner
 from api.users.serializers import UserSerializer, AvatarSerializer
 from api.users.serializers import ExtendUserSerializer
 
+from api.utils import ResponseGenerator
+
 Users = get_user_model()
 
 class UsersViewSet(ModelViewSet):
@@ -111,33 +113,15 @@ class UsersViewSet(ModelViewSet):
     )
     def subscribe(self, request, pk=None):
         """Создание и удаление подписок."""
-        user = self.get_object()
-        current_user = request.user
         recipes_limit = request.query_params.get('recipes_limit', None)
-        exists = current_user.subscriptions.all().filter(id=user.id).exists()
-        if user == current_user:
-            return Response('Нельзя подписаться на самого себя',
-                                status=status.HTTP_400_BAD_REQUEST)
-        if request.method == 'POST':
-            if not exists:
-                current_user.subscriptions.add(user)
-                serializer = ExtendUserSerializer(
-                    user,
-                    context={'recipes_limit': recipes_limit,
-                             'request': request}
-                )
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED)
-            else:
-                return Response('Пользователь уже добавлен',
-                                status=status.HTTP_400_BAD_REQUEST)
-        if request.method == 'DELETE':
-            if exists:
-                current_user.subscriptions.remove(user)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response('Вы не подписаны на пользователя',
-                                status=status.HTTP_400_BAD_REQUEST)
+        context= {'recipes_limit': recipes_limit, 'request': request}
+        response = ResponseGenerator(
+            obj=self.get_object(),
+            srh_obj=request.user,
+            queryset=request.user.subscriptions.all(),
+            req_method=request.method,
+            context=context
+        ).get_response()
+        return response
 
 

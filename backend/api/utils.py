@@ -8,13 +8,19 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from django.contrib.auth import get_user_model
 import os
 from django.conf import settings
 from datetime import datetime
 
-
+from recipe.models import Recipe
+from cart.models import Cart
 from ingredient.models import RecipeIngredient
+from api.users.serializers import ExtendUserSerializer
+from api.recipe.serializers import RecipeStripSerializer
 
+
+User = get_user_model()
 
 class OrderGenerator:
     """Генератор заказов для """
@@ -138,3 +144,111 @@ class OrderGenerator:
             f'attachment; filename="{self.Data.file_name}.txt"'
         )
         return response
+
+
+class ResponseGenerator:
+    
+    exists = True
+    response_map: dict = {}
+    context: dict = {}
+    
+    NO_CONTENT = Response(status=status.HTTP_204_NO_CONTENT)
+    RECIPE_SERIALIZER = RecipeStripSerializer
+    USERSERIALIZER = ExtendUserSerializer
+    
+    def __init__(self, obj, srh_obj, queryset, req_method, context=None):
+        
+        self.obj = obj
+        self.srh_obj = srh_obj
+        self.map_key = (type(obj), type(srh_obj))
+        self.queryset = queryset
+        self.req_method = req_method
+        if context:
+            self.context = context
+        self._set_exists_and_settings_map()
+        self._exists_and_users_validate()
+        
+    def _set_exists_and_settings_map(self):
+        """Установка флага наличия объекта в корзине,
+        избранном или подписках.
+        Настройка карты
+        """
+        self.exists = self.queryset.filter(id=self.obj.id).exists()
+        
+        if self.map_key == (User, User):
+            self.response_map = {
+                (User, User): {
+                    'POST': {
+                        'serializer': ExtendUserSerializer,
+                        'method': self.srh_obj.subscriptions.add
+                    },
+                    'DELETE': {
+                        'serializer': ExtendUserSerializer,
+                        'method': self.srh_obj.subscriptions.remove,
+                    }
+                }
+            }
+        elif self.map_key == (Recipe, Cart):
+            self.response_map = {
+                (Recipe, Cart): {
+                    'POST': {
+                        'serializer': self.RECIPE_SERIALIZER,
+                        'method': self.srh_obj.recipes.add
+                    },
+                    'DELETE': {
+                        'serializer': self.RECIPE_SERIALIZER,
+                        'method': self.srh_obj.recipes.remove,
+                    }
+                },
+            }
+        elif self.map_key == (Recipe, User):
+            self.response_map = {
+                (Recipe, User): {
+                    'POST': {
+                        'serializer': self.RECIPE_SERIALIZER,
+                        'method': self.srh_obj.favourites.add
+                    },
+                    'DELETE': {
+                        'serializer': self.RECIPE_SERIALIZER,
+                        'method': self.srh_obj.favourites.remove,
+                    }
+                },
+            }
+        self.response_map.update({
+            'POST': self._add(),
+            'DELETE': self._delete()
+        })
+
+    def _exists_and_users_validate(self):
+        """Валидация наличия объекта в
+        корзине, подписках, избарнном
+        """
+        if self.map_key == (User, User):
+            if self.obj == self.srh_obj:
+                raise ValidationError('Нельзя подписаться или удалить себя')
+        if self.req_method == 'POST' and self.exists:
+            raise ValidationError('Объект уже добавлен',)
+        if self.req_method == 'DELETE' and not self.exists:
+            raise ValidationError('Объект отсутствует')
+    
+    def get_response(self):
+        """Получение ответа."""
+        if self.req_method == 'POST':
+            response = self._add()
+        else:
+            response = self._delete()
+        return response
+
+    def _add(self):
+        """Добавление объекта в БД и возврат ответа."""
+        self.response_map[self.map_key][self.req_method]['method'](self.obj)
+        serializer = self.response_map[
+            self.map_key][
+                self.req_method][
+                    'serializer'](self.obj, context=self.context)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def _delete(self):
+        """Удаление объекта из БД и возврат ответа."""
+        self.response_map[self.map_key][self.req_method]['method'](self.obj)
+        return self.NO_CONTENT
