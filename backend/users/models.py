@@ -79,14 +79,6 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Подписки'
     )
-    cart = models.OneToOneField(
-        'cart.Cart',
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
-        related_name='owner',
-        verbose_name='Корзина'
-    )
     favourites = models.ManyToManyField(
         'recipe.Recipe',
         blank=True,
@@ -113,14 +105,6 @@ class User(AbstractUser):
 
     def set_password(self, raw_password):
         return super().set_password(raw_password)
-
-    @classmethod
-    def is_subscribed(cls):
-        pass
-
-    @classmethod
-    def is_favorite(cls):
-        pass
 
     @classmethod
     def already_use(cls, kwargs):

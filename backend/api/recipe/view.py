@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 from api.filters import RecipeFilter
 from api.permissions import IsAuthOrOwnerOrRead
@@ -53,7 +54,10 @@ class RecipeVievSet(ModelViewSet):
             f'{request.scheme}'
             f'://{request.get_host()}/api/recipes/{recipe.id}'
         )
-        link, create = RecipeShortLink.objects.get_or_create(recipe=recipe, original_url=original_url)
+        link, create = RecipeShortLink.objects.get_or_create(
+            recipe=recipe,
+            original_url=original_url
+        )
         if create:
             link.save()
         short_link = link.get_short_url(request)
@@ -88,7 +92,7 @@ class RecipeVievSet(ModelViewSet):
         if request.method == 'POST':
             if not exists:
                 cart.recipes.add(recipe)
-                serializer = RecipeForDeleteSerializer(recipe)
+                serializer = RecipeStripSerializer(recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             else:

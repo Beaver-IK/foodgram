@@ -146,6 +146,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeStripSerializer(serializers.ModelSerializer):
+    """Сериализвтор для рецепта с ограниченным выводом данных."""
     class Meta:
         model = Recipe
         fields = (

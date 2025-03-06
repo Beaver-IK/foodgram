@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 from recipe.models import Tag
 from recipe.constants import MIN_COOKING_TIME
 from rest_framework.request import Request
+from detoxify import Detoxify
 
 
 User = get_user_model()

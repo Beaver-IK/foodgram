@@ -8,8 +8,7 @@ from djoser.serializers import SetPasswordSerializer
 
 from api.permissions import IsAuthenticated, IsProfileOwner
 from api.users.serializers import UserSerializer, AvatarSerializer
-
-from users.models import User
+from api.users.serializers import ExtendUserSerializer
 
 Users = get_user_model()
 
@@ -30,13 +29,13 @@ class UsersViewSet(ModelViewSet):
     http_method_name = ['get', 'post']
     pagination_class = pagination.LimitOffsetPagination
     
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={'is_registration': True}
-        )
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def get_serializer(self, *args, **kwargs):
+        kwargs['context'] = {'request': self.request}
+        return super().get_serializer(*args, **kwargs)
+    
+    def perform_create(self, serializer: UserSerializer):
+        serializer.context.update({'is_registration': True})
+        return super().perform_create(serializer)
 
     @action(
         methods=['get'],
@@ -45,7 +44,7 @@ class UsersViewSet(ModelViewSet):
         url_path='me'
     )
     def get_user(self, request):
-        serializer = self.serializer_class(request.user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
@@ -92,13 +91,53 @@ class UsersViewSet(ModelViewSet):
         url_path='subscriptions'
     )
     def subscriptions(self, request):
+        """Вывод водписок."""
         recipes_limit = request.query_params.get('recipes_limit', None)
-        if recipes_limit:
-            recipes_limit = int(recipes_limit)
         queryset = request.user.subscriptions.all()
-        print(queryset)
-        # user = User.objects.get(id=8)
-        # seet = user.recipes.all()[:recipes_limit]
         page = self.paginate_queryset(queryset)
-        return Response('Huy', status=status.HTTP_200_OK)
+        serializer = ExtendUserSerializer(
+                page,
+                context={'recipes_limit': recipes_limit,
+                         'request': self.request},
+                many=True
+            )
+        return self.get_paginated_response(serializer.data)
     
+    @action(
+        methods=['post','delete'],
+        detail=True,
+        permission_classes=[IsAuthenticated],
+        url_path='subscribe'
+    )
+    def subscribe(self, request, pk=None):
+        """Создание и удаление подписок."""
+        user = self.get_object()
+        current_user = request.user
+        recipes_limit = request.query_params.get('recipes_limit', None)
+        exists = current_user.subscriptions.all().filter(id=user.id).exists()
+        if user == current_user:
+            return Response('Нельзя подписаться на самого себя',
+                                status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'POST':
+            if not exists:
+                current_user.subscriptions.add(user)
+                serializer = ExtendUserSerializer(
+                    user,
+                    context={'recipes_limit': recipes_limit,
+                             'request': request}
+                )
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED)
+            else:
+                return Response('Пользователь уже добавлен',
+                                status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'DELETE':
+            if exists:
+                current_user.subscriptions.remove(user)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response('Вы не подписаны на пользователя',
+                                status=status.HTTP_400_BAD_REQUEST)
+
+
