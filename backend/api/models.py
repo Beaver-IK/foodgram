@@ -6,7 +6,7 @@ from django.db import models
 
 class RecipeShortLink(models.Model):
     """Модель для генерации и хранения коротких ссылок."""
-    
+
     class Meta:
         verbose_name = 'Короткая ссылка на рецепт'
         verbose_name_plural = 'Короткие ссылки на рецепты'
@@ -18,9 +18,8 @@ class RecipeShortLink(models.Model):
                 name='unique_short_link',
             )
         ]
-    
-    original_url = models.URLField(max_length=2000,
-                                   unique=True)
+
+    original_url = models.URLField(max_length=2000, unique=True)
     recipe = models.ForeignKey(
         'recipe.Recipe',
         on_delete=models.CASCADE,
@@ -32,19 +31,19 @@ class RecipeShortLink(models.Model):
                                   unique=True,
                                   blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.short_code:
             self.short_code = self.generate_short_code()
         super(RecipeShortLink, self).save(*args, **kwargs)
-            
+
     def generate_short_code(self, length=3):
         characters = string.ascii_letters + string.digits
         while True:
             code = ''.join(random.choice(characters) for _ in range(length))
             if not RecipeShortLink.objects.filter(short_code=code).exists():
                 return code
-    
+
     def get_short_url(self, request):
         return f"{request.scheme}://{request.get_host()}/s/{self.short_code}"
 

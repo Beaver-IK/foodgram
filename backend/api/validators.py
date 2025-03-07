@@ -12,13 +12,15 @@ from recipe.models import Tag
 from users.constants import MAX_FILE_SIZE
 
 User = get_user_model()
+
+
 @deconstructible
 class PhotoValidator:
     """Валидация поля фотографии."""
-    
+
     def __init__(self, size):
         self.size = size
-    
+
     def __call__(self, value):
         if value is None:
             print(value)
@@ -29,9 +31,9 @@ class PhotoValidator:
         if value.size > MAX_FILE_SIZE:
             raise ValidationError(
                 detail={f'Максимальный размер файла '
-                        f'{MAX_FILE_SIZE / (1024 * 1024)} Мб'
-                },
+                        f'{MAX_FILE_SIZE / (1024 * 1024)} Мб'}
             )
+
 
 @deconstructible
 class RecipeDataValidator:
@@ -46,7 +48,7 @@ class RecipeDataValidator:
         self.text = data.get('text', None)
         self.cooking_time = data.get('cooking_time', None)
         self.request = data.get('request', None)
-    
+
     def __call__(self):
         self._name_validation()
         self._author_validator()
@@ -56,7 +58,7 @@ class RecipeDataValidator:
         self._text_validator()
         self._cooking_time_validator()
         self._request_validator()
-    
+
     def _name_validation(self):
         """"Валидация названия."""
         if not self.name:
@@ -97,32 +99,32 @@ class RecipeDataValidator:
             )
         ingredients_id = []
         for value in self.ingredients:
-                ingredient_id = value.get('id')
-                amount = value.get('amount')
-                if not ingredient_id or not amount:
-                    raise ValidationError(
-                        'Для каждого ингрединта должен быть указан '
-                        'id и его количество в рецепте'
-                    )
-                if not isinstance(ingredient_id, int):
-                    raise ValidationError(
-                        {'id': 'Тип данных не соответвует ожидаемому "int"'}
-                    )
-                if not isinstance(amount, int):
-                    raise ValidationError(
-                        {'amount': ('Тип данных не соответвует '
-                                    'ожидаемому "int"')}
-                    )
-                if not Ingredient.objects.filter(id=ingredient_id).exists():
-                    raise ValidationError(
-                        {'id': 'Такого ингредиента не существует'}
-                    )
-                ingredients_id.append(ingredient_id)
+            ingredient_id = value.get('id')
+            amount = value.get('amount')
+            if not ingredient_id or not amount:
+                raise ValidationError(
+                    'Для каждого ингрединта должен быть указан '
+                    'id и его количество в рецепте'
+                )
+            if not isinstance(ingredient_id, int):
+                raise ValidationError(
+                    {'id': 'Тип данных не соответвует ожидаемому "int"'}
+                )
+            if not isinstance(amount, int):
+                raise ValidationError(
+                    {'amount': ('Тип данных не соответвует '
+                                'ожидаемому "int"')}
+                )
+            if not Ingredient.objects.filter(id=ingredient_id).exists():
+                raise ValidationError(
+                    {'id': 'Такого ингредиента не существует'}
+                )
+            ingredients_id.append(ingredient_id)
         if len(set(ingredients_id)) != len(self.ingredients):
             raise ValidationError(
                 {'ingredients': 'Нельзя добавлять одинаковые ингредиенты'}
             )
-    
+
     def _tag_validator(self):
         """Валидатор Тегов."""
 
@@ -195,4 +197,3 @@ class RecipeDataValidator:
             raise ValidationError(
                 {'request': 'Тип данных не соответвует ожидаемому "Request"'}
             )
-        

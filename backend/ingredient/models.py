@@ -6,7 +6,7 @@ from ingredient import constants as c
 
 class Ingredient(models.Model):
     """Модель ингредиента."""
-    
+
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -32,21 +32,22 @@ class Ingredient(models.Model):
         blank=False,
         unique=True
     )
-    
+
     measurement_unit = models.CharField(
         max_length=c.LEN_UNIT_NAME,
         choices=Units.choices,
         default=Units.GRAM
     )
-    
+
     def __str__(self):
         return self.name
+
 
 class RecipeIngredient(models.Model):
     """Промежуточная модель между рецептом
     и ингридиентами с количеством ингридиентов.
     """
-    
+
     class Meta:
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
@@ -57,7 +58,7 @@ class RecipeIngredient(models.Model):
             )
         ]
         default_related_name = 'recipe_ingredients'
-    
+
     recipe = models.ForeignKey(
         'recipe.Recipe',
         on_delete=models.CASCADE

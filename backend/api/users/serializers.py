@@ -14,12 +14,12 @@ User = get_user_model()
 
 class BaseUserSerializer(serializers.ModelSerializer):
     """Базовый сериализатор пользователей."""
-    
+
     is_subscribed = serializers.SerializerMethodField()
-    
+
     def get_is_subscribed(self, obj):
         """Метод получения атрибута подписки."""
-        
+
         request = self.context.get('request')
         current_user = request.user
         if not current_user.is_anonymous and current_user != obj:
@@ -28,7 +28,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    
+    """Сериализатор пользователей."""
     username = serializers.CharField(
         max_length=LEN_USERNAME,
         validators=[NotMeValidator,
@@ -37,7 +37,7 @@ class UserSerializer(BaseUserSerializer):
                         message='Некорректный username',
                         code='invalid_username',
                     ),
-        ]
+                    ]
     )
     password = serializers.CharField(write_only=True)
 
@@ -53,11 +53,10 @@ class UserSerializer(BaseUserSerializer):
             'password',
             'email',)
         read_only_fields = ('id',)
-    
+
     def validate(self, attrs):
         return already_use(attrs)
-        
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         print(self.context)
@@ -65,8 +64,10 @@ class UserSerializer(BaseUserSerializer):
             data.pop('is_subscribed', None)
             data.pop('avatar', None)
         return data
-    
+
+
 class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления аватара."""
     avatar = Base64ImageField(
         name='avatar',
         required=True,
@@ -75,7 +76,7 @@ class AvatarSerializer(serializers.ModelSerializer):
             FileExtensionValidator(allowed_extensions=c.ALLOW_EXT)
         ]
     )
-    
+
     def update(self, instance, validated_data):
         username = instance.username
         print(instance)
@@ -86,7 +87,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         instance.avatar.name = f'{username}{instance.avatar.name}'
         instance.save()
         return instance
-    
+
     class Meta:
         model = User
         fields = ('avatar',)
@@ -96,9 +97,10 @@ class ExtendUserSerializer(BaseUserSerializer):
     """Расширенный сериализатор пользователя.
     Дополнительные поля recipes и recipes_count.
     """
-    
+
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ('id',
@@ -111,10 +113,10 @@ class ExtendUserSerializer(BaseUserSerializer):
                   'recipes_count',
                   'recipes')
         read_only_fields = ('__all__',)
-    
+
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
-    
+
     def get_recipes(self, obj):
         from api.recipe.serializers import RecipeStripSerializer
         recipes_limit = self.context.get('recipes_limit', None)

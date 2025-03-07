@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.mail import send_mail
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
@@ -86,7 +85,7 @@ class User(AbstractUser):
         related_name='favorited_by',
         verbose_name='Избранное'
     )
-    
+
     objects = CustomManager()
 
     EMAIL_FIELD = 'email'
@@ -99,13 +98,6 @@ class User(AbstractUser):
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
-
-    def email_user(self, subject, message, from_email=None, **kwargs):
-        """Отправка письма пользователю."""
-        send_mail(subject, message, from_email, [self.email], **kwargs)
-
-    def set_password(self, raw_password):
-        return super().set_password(raw_password)
 
     @classmethod
     def already_use(cls, kwargs):

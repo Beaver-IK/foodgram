@@ -5,8 +5,8 @@ from ingredient.models import Ingredient
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit_display')
-    search_fields = ('name',)
+    list_display = ('id', 'name', 'measurement_unit_display')
+    search_fields = ('name', 'id',)
     list_filter = ('measurement_unit',)
     ordering = ('name',)
     save_on_top = True

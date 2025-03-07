@@ -4,22 +4,17 @@ from django.shortcuts import get_object_or_404
 
 
 class RecipeManager(models.Manager):
-    
-    
-    """def create(self, **kwargs):
-        return super().create(**kwargs)"""
-    
+    """Менеджер для модели рецепта."""
+
     def create(self, data):
-        
         from api.models import RecipeShortLink
         from api.validators import RecipeDataValidator
         from ingredient.models import Ingredient, RecipeIngredient
         from recipe.models import Tag
-        
+
         validator = RecipeDataValidator(data=data)
         validator()
-        
-        
+
         name = data.get('name')
         author = data.get('author')
         ingredients_data = data.get('ingredients')
@@ -28,7 +23,7 @@ class RecipeManager(models.Manager):
         text = data.get('text')
         cooking_time = data.get('cooking_time')
         request = data.get('request')
-        
+
         with transaction.atomic():
             recipe = self.model(
                 name=name,
@@ -38,7 +33,7 @@ class RecipeManager(models.Manager):
                 cooking_time=cooking_time
             )
             recipe.save()
-            
+
             for value in ingredients_data:
                 ingredient_id = value.get('id')
                 amount = value.get('amount')
@@ -53,7 +48,7 @@ class RecipeManager(models.Manager):
                     ingredient=ingredient,
                     amount=amount)
                 recipe.ingredients.add(ingredient)
-                
+
             if all(isinstance(tag, int) for tag in tags_data):
                 tags = Tag.objects.filter(id__in=tags_data)
                 if len(tags_data) != len(set(tags)):
@@ -61,7 +56,7 @@ class RecipeManager(models.Manager):
             elif all(isinstance(tag, Tag) for tag in tags_data):
                 tags = tags_data
             recipe.tags.set(tags)
-            
+
             original_url = (
                 f'{request.scheme}'
                 f'://{request.get_host()}/api/recipes/{recipe.id}'
@@ -69,9 +64,7 @@ class RecipeManager(models.Manager):
             short_link = RecipeShortLink.objects.create(
                 recipe=recipe,
                 original_url=original_url,
-                )
+            )
             short_link.save()
-            
+
             return recipe
-        
-    

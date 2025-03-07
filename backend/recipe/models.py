@@ -8,13 +8,13 @@ from recipe.managers import RecipeManager
 
 class Recipe(models.Model):
     """Модель рецептов."""
-    
+
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         default_related_name = 'recipes'
         ordering = ['-pub_date', 'name']
-    
+
     name = models.CharField(
         max_length=c.LEN_RECIPE_NAME,
         unique=False,
@@ -70,7 +70,7 @@ class Recipe(models.Model):
         db_index=True,
         verbose_name='Дата добавления',
     )
-    
+
     objects = RecipeManager()
 
     def __str__(self):
@@ -81,7 +81,6 @@ class Tag(models.Model):
     """Модель тега."""
 
     class Meta:
-        
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
         default_related_name = 'tags'

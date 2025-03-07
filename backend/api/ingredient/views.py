@@ -1,4 +1,3 @@
-from rest_framework import filters
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet, mixins
 
@@ -14,10 +13,9 @@ class IngredientViewSet(GenericViewSet,
     Показывает список всех доступных ингредиентов.
     Показывает ингредиент по id.
     """
-    
+
     queryset = Ingredient.objects.all()
     permission_classes = [AllowAny]
     pagination_class = None
     serializer_class = IngredientSerializer
     filter_backends = [StartsWithIngredientFilter]
-    

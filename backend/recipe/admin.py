@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from ingredient.models import Ingredient
 from recipe.models import Recipe, Tag
 
 
@@ -11,6 +10,7 @@ class RecipeIngredientInline(admin.TabularInline):
     verbose_name = 'Ингредиент в рецепте'
     verbose_name_plural = 'Ингредиенты в рецепте'
     autocomplete_fields = ('ingredient',)  # Включаем автодополнение
+
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -37,7 +37,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'author', 'text', 'image', 'cooking_time', 'is_active')
+            'fields': ('name', 'author', 'text', 'image',
+                       'cooking_time', 'is_active')
         }),
         ('Метаданные', {
             'fields': ('pub_date',),
@@ -49,7 +50,7 @@ class RecipeAdmin(admin.ModelAdmin):
     )
 
     def get_tags(self, obj):
-        return ", ".join([tag.name for tag in obj.tags.all()])
+        return ', '.join([tag.name for tag in obj.tags.all()])
     get_tags.short_description = 'Теги'
 
     def image_thumbnail(self, obj):
@@ -61,6 +62,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('tags', 'author')
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

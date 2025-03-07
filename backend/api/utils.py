@@ -22,30 +22,31 @@ from recipe.models import Recipe
 
 User = get_user_model()
 
+
 class OrderGenerator:
     """Генератор заказов для """
-    
+
     class Data:
         file_format = None
         file_name = None
         ingredients_sum = None
-        
+
     def __init__(self, cart, file_format):
-        
+
         self.cart = cart
         self.Data.file_format = file_format
         self.owner = cart.owner
         self._get_order()
-    
+
     def _get_data(self):
         return self.Data.ingredients_sum.items()
-    
+
     def _get_order(self):
         recipes = self.cart.recipes.all()
 
         ingredients_sum = dict()
         counter = 1
-        
+
         for recipe in recipes:
             resipe_ingrediens = RecipeIngredient.objects.filter(recipe=recipe)
             for item in resipe_ingrediens:
@@ -53,23 +54,23 @@ class OrderGenerator:
                 measurement_unit = item.ingredient.measurement_unit
                 amount = item.amount
                 num = counter
-                
+
                 key = (num, name, measurement_unit)
                 if key in ingredients_sum:
                     ingredients_sum[key] += amount
                 else:
                     ingredients_sum[key] = amount
-        
+
         if ingredients_sum:
             self.Data.ingredients_sum = ingredients_sum
-    
+
     def run_generator(self):
         """Запуск генератора файла."""
         if not all(value is not None for value in self.Data.__dict__.values()):
             return Response('Корзина пуста', status=status.HTTP_200_OK)
 
         self.Data.file_name = f'Order_{self.owner}_{datetime.now()}'
-        
+
         get_response = dict(
             txt=self._get_txt(),
             pdf=self._get_pdf(),
@@ -82,8 +83,7 @@ class OrderGenerator:
                 status=status.HTTP_400_BAD_REQUEST
             )
         return response
-        
-    
+
     def _get_pdf(self):
         """Внутренний метод для формирования ответа с файлом pdf."""
         font_path = os.path.join(settings.BASE_DIR, 'fonts', 'greca.ttf')
@@ -91,17 +91,17 @@ class OrderGenerator:
 
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
-        
+
         pdfmetrics.registerFont(TTFont('Greca', font_path))
         p.setFont('Greca', 20)
-        
+
         p.drawImage(logo_path, 50, 725, width=100, height=100)
 
         y_position = 680
         p.drawString(250, 710, 'Список покупок')
-        
+
         p.line(50, 700, 550, 700)
-        
+
         for (num, name, unit), total_amount in self._get_data():
             text = f'{num}. {name} — {total_amount} {unit}'
             y_position -= 20
@@ -115,7 +115,7 @@ class OrderGenerator:
             f'attachment; filename="{self.Data.file_name}.pdf"'
         )
         return response
-    
+
     def _get_csv(self):
         """Внутренний метод для формирования ответа с файлом csv."""
         response = HttpResponse(content_type='text/csv')
@@ -132,7 +132,7 @@ class OrderGenerator:
             writer.writerow([num, name, unit, total_amount])
 
         return response
-    
+
     def _get_txt(self):
         """Внутренний метод для формирования ответа с файлом csv."""
         shopping_list = "Список покупок:\n\n"
@@ -147,17 +147,21 @@ class OrderGenerator:
 
 
 class ResponseGenerator:
-    
+    """Генератор для добавления/удаления и формирования ответов:
+    Добавление/удаление пользователей в подписки.
+    Добавление/удаление рецепта в избранное.
+    Добавление/удаление рецепта в корзину.
+    """
     exists = True
     response_map: dict = {}
     context: dict = {}
-    
+
     NO_CONTENT = Response(status=status.HTTP_204_NO_CONTENT)
     RECIPE_SERIALIZER = RecipeStripSerializer
     USERSERIALIZER = ExtendUserSerializer
-    
+
     def __init__(self, obj, srh_obj, queryset, req_method, context=None):
-        
+
         self.obj = obj
         self.srh_obj = srh_obj
         self.map_key = (type(obj), type(srh_obj))
@@ -167,14 +171,14 @@ class ResponseGenerator:
             self.context = context
         self._set_exists_and_settings_map()
         self._exists_and_users_validate()
-        
+
     def _set_exists_and_settings_map(self):
         """Установка флага наличия объекта в корзине,
         избранном или подписках.
         Настройка карты
         """
         self.exists = self.queryset.filter(id=self.obj.id).exists()
-        
+
         if self.map_key == (User, User):
             self.response_map = {
                 (User, User): {
@@ -214,10 +218,6 @@ class ResponseGenerator:
                     }
                 },
             }
-        self.response_map.update({
-            'POST': self._add(),
-            'DELETE': self._delete()
-        })
 
     def _exists_and_users_validate(self):
         """Валидация наличия объекта в
@@ -230,7 +230,7 @@ class ResponseGenerator:
             raise ValidationError('Объект уже добавлен',)
         if self.req_method == 'DELETE' and not self.exists:
             raise ValidationError('Объект отсутствует')
-    
+
     def get_response(self):
         """Получение ответа."""
         if self.req_method == 'POST':

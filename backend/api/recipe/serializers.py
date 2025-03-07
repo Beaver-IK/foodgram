@@ -1,4 +1,5 @@
 from django.core.validators import FileExtensionValidator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api import constants as c
@@ -11,20 +12,22 @@ from recipe.models import Recipe, Tag
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для Тегов."""
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug',)
 
+
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для создания связей между рецептом и ингредиентами."""
-    
+
     id = serializers.IntegerField(read_only=True, source='ingredient.id')
     name = serializers.CharField(read_only=True, source='ingredient.name')
     measurement_unit = serializers.CharField(
         read_only=True,
         source='ingredient.measurement_unit'
     )
-    
+
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
@@ -32,7 +35,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для создания/обновления рецептов."""
-    
+
     author = UserSerializer(read_only=True)
     image = Base64ImageField(
         name='recipe',
@@ -43,7 +46,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Recipe
         fields = (
@@ -58,19 +61,19 @@ class RecipeSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
         )
-    
+
     def get_is_favorited(self, obj: Recipe):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
         return obj.favorited_by.filter(id=user.id).exists()
-    
+
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
         return user.cart.recipes.filter(id=obj.id).exists()
- 
+
     def validate(self, attrs):
         attrs['ingredients'] = self.initial_data.get('ingredients')
         attrs['author'] = self.context.get('request').user
@@ -94,7 +97,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 f'Ошибка: {e}'
             )
         return recipe
-    
+
     def update(self, instance: Recipe, validated_data):
         instance.name = validated_data.get(
             'name',
@@ -116,25 +119,22 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags', None)
         if tags_data:
             instance.tags.set(tags_data)
-        ingredients_data = validated_data.pop('tags', None)
+        ingredients_data = validated_data.pop('ingredients', None)
         if ingredients_data:
             self._update_recipeingredients(instance, ingredients_data)
-            
         return instance
-    
-    def _update_recipeingredients(self, recipe, ingredients_data):
-        """Метод для обновления данных в связанной модели RecipeIngredient."""
-        
-        RecipeIngredient.objects.filter(recipe=recipe).delete()
-        
+
+    def _update_recipeingredients(self, recipe: Recipe, ingredients_data):
+        """Метод для обновления ингредентов рецепта."""
+
+        recipe.ingredients.remove()
+
         for values in ingredients_data:
-            ingredient = Ingredient.objects.get(id=values.get('id'))
+            print(values)
+            ingredient = get_object_or_404(Ingredient, id=values.get('id'))
             amount = values.get('amount')
-            Recipe.objects.create(
-                recipe=recipe,
-                ingredient=ingredient,
-                amount=amount
-            )
+            recipe.ingredients.add(ingredient,
+                                   through_defaults={'amount': amount})
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -146,6 +146,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeStripSerializer(serializers.ModelSerializer):
     """Сериализвтор для рецепта с ограниченным выводом данных."""
+
     class Meta:
         model = Recipe
         fields = (

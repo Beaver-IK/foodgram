@@ -4,11 +4,11 @@ from django.db import models
 
 class Cart(models.Model):
     """Модель покупательской корзины."""
-    
+
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
-    
+
     owner = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -17,7 +17,7 @@ class Cart(models.Model):
         related_name='cart',
         verbose_name='Владелец корзины'
     )
-    
+
     recipes = models.ManyToManyField(
         'recipe.Recipe',
         blank=True,

@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 class Base64ImageField(serializers.ImageField):
     """Поле для обработки Base64-изображений."""
-    
+
     def __init__(self, name='None', *args, **kwargs):
         self.default_error_messages['required'] = 'Обязательное поле'
         self.default_error_messages['invalid'] = 'Пустое значение'
