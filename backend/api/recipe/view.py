@@ -1,20 +1,20 @@
-from rest_framework.viewsets import GenericViewSet, mixins, ModelViewSet
-from recipe.models import Tag, Recipe
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
-from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, mixins
 
 from api.filters import RecipeFilter
-from api.permissions import IsAuthOrOwnerOrRead
-from api.recipe.serializers import (TagSerializer,
-                                    RecipeSerializer,
-                                    RecipeStripSerializer)
 from api.models import RecipeShortLink
+from api.permissions import IsAuthOrOwnerOrRead
+from api.recipe.serializers import (RecipeSerializer, RecipeStripSerializer,
+                                    TagSerializer)
 from api.utils import OrderGenerator, ResponseGenerator
+from recipe.models import Recipe, Tag
+
 
 class TagViewSet(GenericViewSet, 
                  mixins.ListModelMixin, 

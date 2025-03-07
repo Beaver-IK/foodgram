@@ -1,6 +1,7 @@
-from django.db import models
-import string
 import random
+import string
+
+from django.db import models
 
 
 class RecipeShortLink(models.Model):

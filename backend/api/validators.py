@@ -1,15 +1,15 @@
-from django.utils.deconstruct import deconstructible
-from rest_framework.serializers import ValidationError
-from rest_framework import status
-from users.constants import MAX_FILE_SIZE
-
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.utils.deconstruct import deconstructible
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.serializers import ValidationError
+
 from api.constants import MIN_INGREDIENTS_VALUE
 from ingredient.models import Ingredient
-from django.core.files.base import ContentFile
-from recipe.models import Tag
 from recipe.constants import MIN_COOKING_TIME
-from rest_framework.request import Request
+from recipe.models import Tag
+from users.constants import MAX_FILE_SIZE
 
 User = get_user_model()
 @deconstructible

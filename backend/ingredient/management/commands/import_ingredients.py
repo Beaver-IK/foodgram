@@ -1,10 +1,10 @@
-from django.core.management.base import BaseCommand
-import json
 import csv
+import json
+
+from django.core.management.base import BaseCommand
+
 from foodgram.settings import BASE_DIR
-
 from ingredient.models import Ingredient
-
 
 
 class Command(BaseCommand):

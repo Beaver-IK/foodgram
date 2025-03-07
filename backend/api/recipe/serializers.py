@@ -1,14 +1,13 @@
-from rest_framework import serializers
 from django.core.validators import FileExtensionValidator
+from rest_framework import serializers
 
-from api.validators import PhotoValidator
+from api import constants as c
 from api.fields import Base64ImageField
 from api.users.serializers import UserSerializer
-from ingredient.models import RecipeIngredient
-from recipe.models import Tag, Recipe
-from api.validators import RecipeDataValidator
-from ingredient.models import Ingredient
-from api import constants as c
+from api.validators import PhotoValidator, RecipeDataValidator
+from ingredient.models import Ingredient, RecipeIngredient
+from recipe.models import Recipe, Tag
+
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для Тегов."""

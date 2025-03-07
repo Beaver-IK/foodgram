@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ValidationError
 
-
 User = get_user_model()
 
 def already_use(data):

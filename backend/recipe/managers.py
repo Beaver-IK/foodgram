@@ -1,5 +1,5 @@
-from django.db import models, transaction
 from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 
 
@@ -11,12 +11,10 @@ class RecipeManager(models.Manager):
     
     def create(self, data):
         
-        from recipe.models import Tag
-        from ingredient.models import RecipeIngredient
-        from ingredient.models import Ingredient
         from api.models import RecipeShortLink
-        
         from api.validators import RecipeDataValidator
+        from ingredient.models import Ingredient, RecipeIngredient
+        from recipe.models import Tag
         
         validator = RecipeDataValidator(data=data)
         validator()

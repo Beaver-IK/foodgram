@@ -1,16 +1,13 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
+from rest_framework import serializers
 
-
-from users.constants import LEN_USERNAME
-from django.core.validators import RegexValidator
-
-from users.validators import NotMeValidator
-from api.validators import PhotoValidator
-from api.users.utils import already_use
-from api.fields import Base64ImageField
 from api import constants as c
+from api.fields import Base64ImageField
+from api.users.utils import already_use
+from api.validators import PhotoValidator
+from users.constants import LEN_USERNAME
+from users.validators import NotMeValidator
 
 User = get_user_model()
 

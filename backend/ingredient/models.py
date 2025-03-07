@@ -1,7 +1,8 @@
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
 from ingredient import constants as c
+
 
 class Ingredient(models.Model):
     """Модель ингредиента."""
@@ -37,6 +38,9 @@ class Ingredient(models.Model):
         choices=Units.choices,
         default=Units.GRAM
     )
+    
+    def __str__(self):
+        return self.name
 
 class RecipeIngredient(models.Model):
     """Промежуточная модель между рецептом

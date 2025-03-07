@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect
+
 from api.models import RecipeShortLink
+
 
 def redirect_to_original(request, short_code):
     """

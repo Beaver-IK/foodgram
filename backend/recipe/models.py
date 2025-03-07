@@ -1,6 +1,6 @@
-from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.db import models
 
 from recipe import constants as c
 from recipe.managers import RecipeManager
@@ -101,4 +101,4 @@ class Tag(models.Model):
     )
 
     def __str__(self):
-        return self.slug
+        return self.name
