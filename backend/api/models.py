@@ -45,7 +45,7 @@ class RecipeShortLink(models.Model):
                 return code
 
     def get_short_url(self, request):
-        return f"{request.scheme}://{request.get_host()}/s/{self.short_code}"
+        return f'{request.scheme}://{request.get_host()}/s/{self.short_code}'
 
     def __str__(self):
-        return f'{self.original_url} -> {self.short_code}'
+        return self.get_short_url
