@@ -6,7 +6,6 @@ from rest_framework.request import Request
 from rest_framework.serializers import ValidationError
 
 from api.constants import MIN_INGREDIENTS_VALUE
-from ingredient.models import Ingredient
 from recipe.constants import MIN_COOKING_TIME
 from recipe.models import Tag
 from users.constants import MAX_FILE_SIZE
@@ -106,19 +105,19 @@ class RecipeDataValidator:
                     'Для каждого ингрединта должен быть указан '
                     'id и его количество в рецепте'
                 )
-            #if not isinstance(ingredient_id, int):
-            #    raise ValidationError(
-            #        {'id': 'Тип данных не соответвует ожидаемому "int"'}
-            #    )
-            #if not isinstance(amount, int):
-            #    raise ValidationError(
-            #        {'amount': ('Тип данных не соответвует '
-            #                    'ожидаемому "int"')}
-            #    )
-            #if not Ingredient.objects.filter(id=ingredient_id).exists():
-            #    raise ValidationError(
-            #        {'id': 'Такого ингредиента не существует'}
-            #    )
+            # if not isinstance(ingredient_id, int):
+            #     raise ValidationError(
+            #         {'id': 'Тип данных не соответвует ожидаемому "int"'}
+            #     )
+            # if not isinstance(amount, int):
+            #     raise ValidationError(
+            #         {'amount': ('Тип данных не соответвует '
+            #                     'ожидаемому "int"')}
+            #     )
+            # if not Ingredient.objects.filter(id=ingredient_id).exists():
+            #     raise ValidationError(
+            #         {'id': 'Такого ингредиента не существует'}
+            #     )
             ingredients_id.append(ingredient_id)
         if len(set(ingredients_id)) != len(self.ingredients):
             raise ValidationError(
