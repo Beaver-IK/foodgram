@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from decouple import config
@@ -102,10 +101,10 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles/'
+STATIC_ROOT = BASE_DIR / 'collected_static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/media/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -133,3 +132,6 @@ DJOSER = {
         'set_password': 'djoser.serializers.SetPasswordSerializer'
     },
 }
+
+# CORS_ALLOW_ALL_ORIGINS = DEBUG
+# CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split()
