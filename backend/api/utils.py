@@ -67,9 +67,6 @@ class OrderGenerator:
 
     def run_generator(self):
         """Запуск генератора файла."""
-        # if not all(value is not None for value in
-        # self.Data.__dict__.values()):
-        #    return Response('Корзина пуста', status=status.HTTP_200_OK)
 
         self.Data.file_name = f'Order_{self.owner}_{datetime.now()}'
 
