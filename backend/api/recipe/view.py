@@ -51,7 +51,7 @@ class RecipeVievSet(ModelViewSet):
         recipe = self.get_object()
         original_url = (
             f'{request.scheme}'
-            f'://{request.get_host()}/api/recipes/{recipe.id}'
+            f'://{request.get_host()}/recipes/{recipe.id}'
         )
         link, create = RecipeShortLink.objects.get_or_create(
             recipe=recipe,

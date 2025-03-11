@@ -124,14 +124,15 @@ class RecipeSerializer(serializers.ModelSerializer):
             self._update_recipeingredients(instance, ingredients_data)
         return instance
 
-    def _update_recipeingredients(self, recipe: Recipe, ingredients_data):
+    def _update_recipeingredients(self, recipe, ingredients_data):
         """Метод для обновления ингредентов рецепта."""
 
         recipe.ingredients.remove()
 
         for values in ingredients_data:
-            ingredient = Ingredient.objects.get(id=values.get('id'))
-            if not ingredient:
+            try:
+                ingredient = Ingredient.objects.get(id=values.get('id'))
+            except Ingredient.DoesNotExist:
                 raise ValidationError('Ингредиент не существует')
             amount = values.get('amount')
             recipe.ingredients.add(ingredient,
