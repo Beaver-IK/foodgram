@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
-from rest_framework import filters, pagination, status
+from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from api.paginators import LimitSizePagination
 from api.permissions import IsAuthenticated, IsProfileOwner
 from api.users.serializers import (AvatarSerializer, ExtendUserSerializer,
                                    UserSerializer)
@@ -29,7 +30,7 @@ class UsersViewSet(ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('$username',)
     http_method_name = ['get', 'post']
-    pagination_class = pagination.LimitOffsetPagination
+    pagination_class = LimitSizePagination
 
     def get_serializer(self, *args, **kwargs):
         kwargs['context'] = {'request': self.request}

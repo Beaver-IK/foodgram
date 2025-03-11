@@ -2,7 +2,6 @@ from pathlib import Path
 
 from decouple import config
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
@@ -113,8 +112,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    #'PAGE_SIZE': 6,
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -132,6 +129,3 @@ DJOSER = {
         'set_password': 'djoser.serializers.SetPasswordSerializer'
     },
 }
-
-# CORS_ALLOW_ALL_ORIGINS = DEBUG
-# CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split()
