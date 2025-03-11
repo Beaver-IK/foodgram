@@ -74,7 +74,7 @@ class Recipe(models.Model):
     objects = RecipeManager()
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 class Tag(models.Model):
@@ -100,4 +100,4 @@ class Tag(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return str(self.name)
