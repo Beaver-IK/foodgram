@@ -60,6 +60,7 @@ class OrderGenerator:
                     ingredients_sum[key] += amount
                 else:
                     ingredients_sum[key] = amount
+                counter += 1
 
         if ingredients_sum:
             self.Data.ingredients_sum = ingredients_sum
