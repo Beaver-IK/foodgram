@@ -40,7 +40,7 @@ class Ingredient(models.Model):
     )
 
     def __str__(self):
-        return str(self.name)
+        return f'{self.name}'
 
 
 class RecipeIngredient(models.Model):

@@ -93,7 +93,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     def __str__(self):
-        return self.username
+        return f'{self.username}'
 
     def clean(self):
         super().clean()
