@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, mixins
 
 from api.filters import RecipeFilter
+from api.paginators import LimitSizePagination
 from api.models import RecipeShortLink
 from api.permissions import IsAuthOrOwnerOrRead
 from api.recipe.serializers import RecipeSerializer, TagSerializer
@@ -31,7 +32,7 @@ class RecipeVievSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthOrOwnerOrRead]
-    pagination_class = LimitOffsetPagination
+    pagination_class = LimitSizePagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'delete']

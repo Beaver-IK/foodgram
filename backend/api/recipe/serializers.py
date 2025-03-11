@@ -1,6 +1,6 @@
 from django.core.validators import FileExtensionValidator
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import ValidationError
 
 from api import constants as c
 from api.fields import Base64ImageField
@@ -130,8 +130,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe.ingredients.remove()
 
         for values in ingredients_data:
-            print(values)
-            ingredient = get_object_or_404(Ingredient, id=values.get('id'))
+            ingredient = Ingredient.objects.get(id=values.get('id'))
+            if not ingredient:
+                raise ValidationError('Ингредиент не существует')
             amount = values.get('amount')
             recipe.ingredients.add(ingredient,
                                    through_defaults={'amount': amount})
