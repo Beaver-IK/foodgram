@@ -22,7 +22,6 @@ class PhotoValidator:
 
     def __call__(self, value):
         if value is None:
-            print(value)
             raise ValidationError(
                 detail={'avatar': 'Обязатльное поле'},
                 code=status.HTTP_400_BAD_REQUEST
