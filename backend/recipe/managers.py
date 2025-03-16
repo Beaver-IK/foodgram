@@ -2,15 +2,15 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 
+from api.models import RecipeShortLink
+from api.validators import RecipeDataValidator
+from ingredient.models import Ingredient, RecipeIngredient
+
 
 class RecipeManager(models.Manager):
     """Менеджер для модели рецепта."""
 
     def create(self, data):
-        from api.models import RecipeShortLink
-        from api.validators import RecipeDataValidator
-        from ingredient.models import Ingredient, RecipeIngredient
-        from recipe.models import Tag
 
         validator = RecipeDataValidator(data=data)
         validator()
@@ -22,7 +22,6 @@ class RecipeManager(models.Manager):
         image = data.get('image')
         text = data.get('text')
         cooking_time = data.get('cooking_time')
-        request = data.get('request')
 
         with transaction.atomic():
             recipe = self.model(
@@ -34,6 +33,8 @@ class RecipeManager(models.Manager):
             )
             recipe.save()
 
+            recipe_ingredients = []
+
             for value in ingredients_data:
                 ingredient_id = value.get('id')
                 amount = value.get('amount')
@@ -43,27 +44,17 @@ class RecipeManager(models.Manager):
                         'id и его количество в рецепте'
                     )
                 ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-                RecipeIngredient.objects.create(
+                recipe_ingredients.append(RecipeIngredient(
                     recipe=recipe,
                     ingredient=ingredient,
                     amount=amount)
-                recipe.ingredients.add(ingredient)
+                )
+            RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
-            if all(isinstance(tag, int) for tag in tags_data):
-                tags = Tag.objects.filter(id__in=tags_data)
-                if len(tags_data) != len(set(tags)):
-                    raise ValidationError('Есть несуществующие теги')
-            elif all(isinstance(tag, Tag) for tag in tags_data):
-                tags = tags_data
-            recipe.tags.set(tags)
+            recipe.tags.set(tags_data)
 
-            original_url = (
-                f'{request.scheme}'
-                f'://{request.get_host()}/api/recipes/{recipe.id}'
-            )
             short_link = RecipeShortLink.objects.create(
                 recipe=recipe,
-                original_url=original_url,
             )
             short_link.save()
 

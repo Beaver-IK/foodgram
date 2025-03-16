@@ -1,19 +1,23 @@
 import django_filters
-from rest_framework import filters
 
+from ingredient.models import Ingredient
 from recipe.models import Recipe, Tag
 
 
-class StartsWithIngredientFilter(filters.BaseFilterBackend):
-    """Фильтр, для фильтрации в запросе по имени ингредиента.
-    Фильтрует все значения, которые начинаются с заданной подстроки.
+class StartsWithIngredientFilter(django_filters.FilterSet):
     """
+    Фильтр для модели Ingredient, который позволяет фильтровать
+    ингредиенты по имени, начинающемуся с заданной подстроки.
+    """
+    name = django_filters.CharFilter(
+        field_name='name',
+        lookup_expr='startswith',
+        label='Name starts with'
+    )
 
-    def filter_queryset(self, request, queryset, view):
-        name = request.query_params.get('name', None)
-        if name:
-            return queryset.filter(name__startswith=name)
-        return queryset
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -36,7 +40,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['author', 'tags']
+        fields = ('author', 'tags',)
 
     def in_cart_filter(self, queryset, name, value):
         user = self.request.user

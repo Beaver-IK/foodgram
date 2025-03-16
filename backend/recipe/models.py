@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from recipe import constants as c
@@ -8,12 +8,6 @@ from recipe.managers import RecipeManager
 
 class Recipe(models.Model):
     """Модель рецептов."""
-
-    class Meta:
-        verbose_name = 'Рецепт'
-        verbose_name_plural = 'Рецепты'
-        default_related_name = 'recipes'
-        ordering = ['-pub_date', 'name']
 
     name = models.CharField(
         max_length=c.LEN_RECIPE_NAME,
@@ -54,7 +48,8 @@ class Recipe(models.Model):
         verbose_name='Описание'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(c.MIN_COOKING_TIME)],
+        validators=[MinValueValidator(c.MIN_COOKING_TIME),
+                    MaxValueValidator(c.MAX_COOKING_TIME)],
         blank=False,
         null=False,
         help_text='Время приготовления в минутах.',
@@ -73,17 +68,18 @@ class Recipe(models.Model):
 
     objects = RecipeManager()
 
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+        default_related_name = 'recipes'
+        ordering = ['-pub_date', 'name']
+
     def __str__(self):
         return f'{self.name}'
 
 
 class Tag(models.Model):
     """Модель тега."""
-
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-        default_related_name = 'tags'
 
     name = models.CharField(
         max_length=c.LEN_TAG_NAME,
@@ -98,6 +94,11 @@ class Tag(models.Model):
         null=False,
         verbose_name='Слаг'
     )
+
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        default_related_name = 'tags'
 
     def __str__(self):
         return f'{self.name}'

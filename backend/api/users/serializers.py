@@ -59,7 +59,6 @@ class UserSerializer(BaseUserSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        print(self.context)
         if self.context.get('is_registration'):
             data.pop('is_subscribed', None)
             data.pop('avatar', None)
@@ -79,7 +78,6 @@ class AvatarSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         username = instance.username
-        print(instance)
         avatar = validated_data.get('avatar')
 
         if avatar:
@@ -115,7 +113,7 @@ class ExtendUserSerializer(BaseUserSerializer):
         read_only_fields = ('__all__',)
 
     def get_recipes_count(self, obj):
-        return obj.recipes.all().count()
+        return obj.recipes.count()
 
     def get_recipes(self, obj):
         from api.recipe.serializers import RecipeStripSerializer

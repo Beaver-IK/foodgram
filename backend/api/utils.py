@@ -5,6 +5,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
@@ -16,15 +17,13 @@ from rest_framework.validators import ValidationError
 
 from api.recipe.serializers import RecipeStripSerializer
 from api.users.serializers import ExtendUserSerializer
-from cart.models import Cart
 from ingredient.models import RecipeIngredient
-from recipe.models import Recipe
 
 User = get_user_model()
 
 
 class OrderGenerator:
-    """Генератор заказов для """
+    """Генератор заказа продуктов из корзины."""
 
     class Data:
         file_format = None
@@ -42,25 +41,20 @@ class OrderGenerator:
         return self.Data.ingredients_sum.items()
 
     def _get_order(self):
-        recipes = self.cart.recipes.all()
+        ingredients_sum = (
+            RecipeIngredient.objects.
+            filter(recipe__in=self.cart.recipes.all()).
+            values('ingredient__name', 'ingredient__measurement_unit').
+            annotate(total_amount=Sum('amount'))
+        )
 
-        ingredients_sum = dict()
-        counter = 1
-
-        for recipe in recipes:
-            resipe_ingrediens = RecipeIngredient.objects.filter(recipe=recipe)
-            for item in resipe_ingrediens:
-                name = item.ingredient.name
-                measurement_unit = item.ingredient.measurement_unit
-                amount = item.amount
-                num = counter
-
-                key = (num, name, measurement_unit)
-                if key in ingredients_sum:
-                    ingredients_sum[key] += amount
-                else:
-                    ingredients_sum[key] = amount
-                counter += 1
+        ingredients_sum = tuple(
+            (i,
+             item['ingredient__name'],
+             item['ingredient__measurement_unit'],
+             item['total_amount']) for i, item in enumerate(ingredients_sum,
+                                                            start=1)
+        )
 
         if ingredients_sum:
             self.Data.ingredients_sum = ingredients_sum
@@ -101,7 +95,7 @@ class OrderGenerator:
 
         p.line(50, 700, 550, 700)
 
-        for (num, name, unit), total_amount in self._get_data():
+        for num, name, unit, total_amount in self.Data.ingredients_sum:
             text = f'{num}. {name} — {total_amount} {unit}'
             y_position -= 20
             p.drawString(100, y_position, text)
@@ -127,15 +121,15 @@ class OrderGenerator:
             ['п/п', 'Название', 'Единица измерения', 'Общее кол-во']
         )
 
-        for (num, name, unit), total_amount in self._get_data():
+        for num, name, unit, total_amount in self.Data.ingredients_sum:
             writer.writerow([num, name, unit, total_amount])
 
         return response
 
     def _get_txt(self):
-        """Внутренний метод для формирования ответа с файлом csv."""
+        """Внутренний метод для формирования ответа с файлом txt."""
         shopping_list = "Список покупок:\n\n"
-        for (num, name, unit), total_amount in self._get_data():
+        for num, name, unit, total_amount in self.Data.ingredients_sum:
             shopping_list += f'{num}. {name} — {total_amount} {unit}\n'
 
         response = HttpResponse(shopping_list, content_type='text/plain')
@@ -145,12 +139,9 @@ class OrderGenerator:
         return response
 
 
-class ResponseGenerator:
-    """Генератор для добавления/удаления и формирования ответов:
-    Добавление/удаление пользователей в подписки.
-    Добавление/удаление рецепта в избранное.
-    Добавление/удаление рецепта в корзину.
-    """
+class BaseResponseGenerator:
+    """Базовый класс для генераторов HTTP ответов."""
+
     exists = True
     response_map: dict = {}
     context: dict = {}
@@ -163,91 +154,85 @@ class ResponseGenerator:
 
         self.obj = obj
         self.srh_obj = srh_obj
-        self.map_key = (type(obj), type(srh_obj))
         self.queryset = queryset
         self.req_method = req_method
         if context:
             self.context = context
-        self._set_exists_and_settings_map()
-        self._exists_and_users_validate()
+        self._set_exists()
 
-    def _set_exists_and_settings_map(self):
-        """Установка флага наличия объекта в корзине,
-        избранном или подписках.
-        Настройка карты
-        """
+    def _set_exists(self):
+        """Установка флага наличия объекта базе данных."""
+
         self.exists = self.queryset.filter(id=self.obj.id).exists()
 
-        if self.map_key == (User, User):
-            self.response_map = {
-                (User, User): {
-                    'POST': {
-                        'serializer': ExtendUserSerializer,
-                        'method': self.srh_obj.subscriptions.add
-                    },
-                    'DELETE': {
-                        'serializer': ExtendUserSerializer,
-                        'method': self.srh_obj.subscriptions.remove,
-                    }
-                }
-            }
-        elif self.map_key == (Recipe, Cart):
-            self.response_map = {
-                (Recipe, Cart): {
-                    'POST': {
-                        'serializer': self.RECIPE_SERIALIZER,
-                        'method': self.srh_obj.recipes.add
-                    },
-                    'DELETE': {
-                        'serializer': self.RECIPE_SERIALIZER,
-                        'method': self.srh_obj.recipes.remove,
-                    }
-                },
-            }
-        elif self.map_key == (Recipe, User):
-            self.response_map = {
-                (Recipe, User): {
-                    'POST': {
-                        'serializer': self.RECIPE_SERIALIZER,
-                        'method': self.srh_obj.favourites.add
-                    },
-                    'DELETE': {
-                        'serializer': self.RECIPE_SERIALIZER,
-                        'method': self.srh_obj.favourites.remove,
-                    }
-                },
-            }
-
-    def _exists_and_users_validate(self):
-        """Валидация наличия объекта в
-        корзине, подписках, избарнном
-        """
-        if self.map_key == (User, User):
-            if self.obj == self.srh_obj:
-                raise ValidationError('Нельзя подписаться или удалить себя')
+    def _validate(self):
+        """Проверка корректности запроса."""
         if self.req_method == 'POST' and self.exists:
             raise ValidationError('Объект уже добавлен',)
         if self.req_method == 'DELETE' and not self.exists:
             raise ValidationError('Объект отсутствует')
 
     def get_response(self):
-        """Получение ответа."""
+        """Получение HTTP-ответа."""
+        self._validate()
         if self.req_method == 'POST':
-            response = self._add()
-        else:
-            response = self._delete()
-        return response
+            return self._add()
+        return self._delete()
 
     def _add(self):
-        """Добавление объекта в БД и возврат ответа."""
-        self.response_map[self.map_key][self.req_method]['method'](self.obj)
-        serializer = self.response_map[
-            self.map_key][
-                self.req_method][
-                    'serializer'](self.obj, context=self.context)
+        """Добавление объекта (реализуется в дочерних классах)."""
+        raise NotImplementedError
+
+    def _delete(self):
+        """Удаление объекта (реализуется в дочерних классах)."""
+        raise NotImplementedError
+
+
+class SubscriptionResponseGenerator(BaseResponseGenerator):
+    """Генератор добавления/удаления подписок."""
+
+    def _add(self):
+        """Добавление подписки."""
+        self.srh_obj.subscriptions.add(self.obj)
+        serializer = self.USERSERIALIZER(self.obj, context=self.context)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
-        """Удаление объекта из БД и возврат ответа."""
-        self.response_map[self.map_key][self.req_method]['method'](self.obj)
+        """Удаление подписки."""
+        self.srh_obj.subscriptions.remove(self.obj)
+        return self.NO_CONTENT
+
+    def _validate(self):
+        super()._validate()
+        if self.obj == self.srh_obj:
+            raise ValidationError('Нельзя подписаться или удалить себя')
+
+
+class FavoriteResponseGenerator(BaseResponseGenerator):
+    """Генератор добавления/удаления рецепта в избранное."""
+
+    def _add(self):
+        """Добавление рецепта в избранное."""
+        self.srh_obj.favourites.add(self.obj)
+        serializer = self.RECIPE_SERIALIZER(self.obj, context=self.context)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def _delete(self):
+        """Удаление рецепта из избранного."""
+        self.srh_obj.favourites.remove(self.obj)
+        return self.NO_CONTENT
+
+
+class CartResponseGenerator(BaseResponseGenerator):
+    """Генератор добавления/удаления рецепта в конзину."""
+
+    def _add(self):
+        """Добавление рецепта в корзину."""
+        self.srh_obj.recipes.add(self.obj)
+        serializer = self.RECIPE_SERIALIZER(self.obj, context=self.context)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def _delete(self):
+        """Удаление рецепта из корзины."""
+        self.srh_obj.recipes.remove(self.obj)
         return self.NO_CONTENT

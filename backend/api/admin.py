@@ -11,7 +11,6 @@ class RecipeShortLinkAdmin(admin.ModelAdmin):
     list_display = (
         'recipe_link',
         'short_url_display',
-        'original_url_truncated',
         'created_at'
     )
     search_fields = ('recipe__name', 'original_url', 'short_code')
@@ -19,7 +18,6 @@ class RecipeShortLinkAdmin(admin.ModelAdmin):
     readonly_fields = ('short_code', 'created_at', 'short_url_display')
     fields = (
         'recipe',
-        'original_url',
         'short_code',
         'created_at',
         'short_url_display'
@@ -32,13 +30,13 @@ class RecipeShortLinkAdmin(admin.ModelAdmin):
         self.request = request
         return super().get_queryset(request)
 
+    @admin.display(description='Рецепт', ordering='recipe__name')
     def recipe_link(self, obj):
         """Ссылка на связанный рецепт"""
         url = reverse('admin:recipe_recipe_change', args=[obj.recipe.id])
         return format_html('<a href="{}">{}</a>', url, obj.recipe.name)
-    recipe_link.short_description = 'Рецепт'
-    recipe_link.admin_order_field = 'recipe__name'
 
+    @admin.display(description='Короткая ссылка')
     def short_url_display(self, obj):
         """Отображение полной короткой ссылки"""
         if obj.short_code:
@@ -49,15 +47,6 @@ class RecipeShortLinkAdmin(admin.ModelAdmin):
                 obj.short_code
             )
         return '-'
-    short_url_display.short_description = 'Короткая ссылка'
-
-    def original_url_truncated(self, obj):
-        """Сокращенный URL для отображения"""
-        max_length = 50
-        if len(obj.original_url) > max_length:
-            return f'{obj.original_url[:max_length]}...'
-        return obj.original_url
-    original_url_truncated.short_description = 'Оригинальный URL'
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Оптимизация выбора рецепта"""

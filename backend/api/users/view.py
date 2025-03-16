@@ -2,15 +2,15 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.paginators import LimitSizePagination
-from api.permissions import IsAuthenticated, IsProfileOwner
+from api.permissions import IsProfileOwner
 from api.users.serializers import (AvatarSerializer, ExtendUserSerializer,
                                    UserSerializer)
-from api.utils import ResponseGenerator
+from api.utils import SubscriptionResponseGenerator
 
 Users = get_user_model()
 
@@ -116,7 +116,7 @@ class UsersViewSet(ModelViewSet):
         """Создание и удаление подписок."""
         recipes_limit = request.query_params.get('recipes_limit', None)
         context = {'recipes_limit': recipes_limit, 'request': request}
-        response = ResponseGenerator(
+        response = SubscriptionResponseGenerator(
             obj=self.get_object(),
             srh_obj=request.user,
             queryset=request.user.subscriptions.all(),

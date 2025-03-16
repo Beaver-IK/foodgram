@@ -7,10 +7,6 @@ from ingredient import constants as c
 class Ingredient(models.Model):
     """Модель ингредиента."""
 
-    class Meta:
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-
     class Units(models.TextChoices):
         HANDFUL = 'горсть', 'Горсти'
         DROP = 'капля', 'Капли'
@@ -39,6 +35,10 @@ class Ingredient(models.Model):
         default=Units.GRAM
     )
 
+    class Meta:
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+
     def __str__(self):
         return f'{self.name}'
 
@@ -47,17 +47,6 @@ class RecipeIngredient(models.Model):
     """Промежуточная модель между рецептом
     и ингридиентами с количеством ингридиентов.
     """
-
-    class Meta:
-        verbose_name = 'Ингредиент рецепта'
-        verbose_name_plural = 'Ингредиенты рецепта'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['recipe', 'ingredient'],
-                name='unique_ingredient',
-            )
-        ]
-        default_related_name = 'recipe_ingredients'
 
     recipe = models.ForeignKey(
         'recipe.Recipe',
@@ -71,3 +60,14 @@ class RecipeIngredient(models.Model):
         validators=[MinValueValidator(1)],
         help_text='Укажите количество',
         verbose_name='Общее количество')
+
+    class Meta:
+        verbose_name = 'Ингредиент рецепта'
+        verbose_name_plural = 'Ингредиенты рецепта'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_ingredient',
+            )
+        ]
+        default_related_name = 'recipe_ingredients'

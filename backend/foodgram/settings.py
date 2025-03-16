@@ -8,10 +8,7 @@ SECRET_KEY = config('SECRET_KEY')
 
 ENV = config('ENV', default='prod')
 
-if ENV == 'dev':
-    DEBUG = True
-else:
-    DEBUG = False
+DEBUG = ENV == 'dev'
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split()
 

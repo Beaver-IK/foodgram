@@ -1,7 +1,7 @@
 from django.apps import apps
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager
 from django.db import transaction
-from django.contrib.auth.hashers import make_password
 
 from cart.models import Cart
 
@@ -30,8 +30,8 @@ class CustomManager(UserManager):
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(username, email, password, **extra_fields)
 
-    def create(self, **kwargs):
-        return self.create_user(**kwargs)
+    def create(self, username, email, password, **extra_fields):
+        return self.create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email=None,
                          password=None, **extra_fields):

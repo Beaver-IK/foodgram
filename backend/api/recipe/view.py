@@ -3,20 +3,20 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet, mixins
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.filters import RecipeFilter
 from api.models import RecipeShortLink
 from api.paginators import LimitSizePagination
-from api.permissions import IsAuthOrOwnerOrRead
-from api.recipe.serializers import RecipeSerializer, TagSerializer
-from api.utils import OrderGenerator, ResponseGenerator
+from api.permissions import IsAuthorOrReadOnly
+from api.recipe.serializers import (RecipeCreateUpdateSerializer,
+                                    RecipeReadSerializer, TagSerializer)
+from api.utils import (CartResponseGenerator, FavoriteResponseGenerator,
+                       OrderGenerator)
 from recipe.models import Recipe, Tag
 
 
-class TagViewSet(GenericViewSet,
-                 mixins.ListModelMixin,
-                 mixins.RetrieveModelMixin):
+class TagViewSet(ReadOnlyModelViewSet):
     """Вьюсет для Тегов."""
 
     queryset = Tag.objects.all()
@@ -29,33 +29,54 @@ class RecipeVievSet(ModelViewSet):
     """Вьюсет для рецептов"""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    permission_classes = [IsAuthOrOwnerOrRead]
     pagination_class = LimitSizePagination
+    serializer_class = RecipeReadSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
+    permissions_actions = {
+        'create': [IsAuthenticated],
+        'update': [IsAuthenticated, IsAuthorOrReadOnly],
+        'partial_update': [IsAuthenticated, IsAuthorOrReadOnly],
+        'destroy': [IsAuthenticated, IsAuthorOrReadOnly],
+        'add_delete_cart_recipes': [IsAuthenticated],
+        'get_order': [IsAuthenticated],
+        'favorites': [IsAuthenticated],
+    }
+
+    def get_permissions(self):
+        if self.action in self.permissions_actions:
+            permission_classes = self.permissions_actions[self.action]
+        else:
+            permission_classes = [AllowAny]
+        return [permissions() for permissions in permission_classes]
+
+    def get_queryset(self):
+        return Recipe.objects.all().select_related(
+            'author').prefetch_related('tags', 'ingredients')
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeReadSerializer
+        return RecipeCreateUpdateSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     @action(
         methods=['get'],
         detail=True,
-        permission_classes=[AllowAny],
         url_path='get-link'
     )
     def get_link(self, request, pk=None):
         recipe = self.get_object()
-        original_url = (
-            f'{request.scheme}'
-            f'://{request.get_host()}/recipes/{recipe.id}'
-        )
         link, create = RecipeShortLink.objects.get_or_create(
             recipe=recipe,
-            original_url=original_url
         )
         if create:
             link.save()
@@ -67,7 +88,6 @@ class RecipeVievSet(ModelViewSet):
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=[IsAuthenticated],
         url_path='download_shopping_cart'
     )
     def get_order(self, request):
@@ -81,11 +101,10 @@ class RecipeVievSet(ModelViewSet):
     @action(
         methods=['post', 'delete'],
         detail=True,
-        permission_classes=[IsAuthenticated],
         url_path='shopping_cart'
     )
     def add_delete_cart_recipes(self, request, pk=None):
-        response = ResponseGenerator(
+        response = CartResponseGenerator(
             obj=self.get_object(),
             srh_obj=request.user.cart,
             queryset=request.user.cart.recipes.all(),
@@ -96,11 +115,10 @@ class RecipeVievSet(ModelViewSet):
     @action(
         methods=['post', 'delete'],
         detail=True,
-        permission_classes=[IsAuthenticated],
         url_path='favorite'
     )
     def favorites(self, request, pk=None):
-        response = ResponseGenerator(
+        response = FavoriteResponseGenerator(
             obj=self.get_object(),
             srh_obj=request.user,
             queryset=self.request.user.favourites.all(),
