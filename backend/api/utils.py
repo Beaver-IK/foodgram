@@ -150,7 +150,8 @@ class BaseResponseGenerator:
     RECIPE_SERIALIZER = RecipeStripSerializer
     USERSERIALIZER = ExtendUserSerializer
 
-    def __init__(self, target_item, container, queryset, req_method, context=None):
+    def __init__(self, target_item, container,
+                 queryset, req_method, context=None):
 
         self.target_item = target_item
         self.container = container
@@ -194,7 +195,9 @@ class SubscriptionResponseGenerator(BaseResponseGenerator):
     def _add(self):
         """Добавление подписки."""
         self.container.subscriptions.add(self.target_item)
-        serializer = self.USERSERIALIZER(self.target_item, context=self.context)
+        serializer = self.USERSERIALIZER(
+            self.target_item, context=self.context
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
@@ -214,7 +217,9 @@ class FavoriteResponseGenerator(BaseResponseGenerator):
     def _add(self):
         """Добавление рецепта в избранное."""
         self.container.favourites.add(self.target_item)
-        serializer = self.RECIPE_SERIALIZER(self.target_item, context=self.context)
+        serializer = self.RECIPE_SERIALIZER(
+            self.target_item, context=self.context
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
@@ -229,7 +234,9 @@ class CartResponseGenerator(BaseResponseGenerator):
     def _add(self):
         """Добавление рецепта в корзину."""
         self.container.recipes.add(self.target_item)
-        serializer = self.RECIPE_SERIALIZER(self.target_item, context=self.context)
+        serializer = self.RECIPE_SERIALIZER(
+            self.target_item, context=self.context
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):

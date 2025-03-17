@@ -1,10 +1,8 @@
-from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.shortcuts import get_object_or_404
 
 from api.models import RecipeShortLink
 from api.validators import RecipeDataValidator
-from ingredient.models import Ingredient, RecipeIngredient
+from ingredient.models import RecipeIngredient
 
 
 class RecipeManager(models.Manager):
