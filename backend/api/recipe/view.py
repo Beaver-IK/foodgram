@@ -105,8 +105,8 @@ class RecipeVievSet(ModelViewSet):
     )
     def add_delete_cart_recipes(self, request, pk=None):
         response = CartResponseGenerator(
-            obj=self.get_object(),
-            srh_obj=request.user.cart,
+            target_item=self.get_object(),
+            container=request.user.cart,
             queryset=request.user.cart.recipes.all(),
             req_method=request.method,
         ).get_response()
@@ -119,8 +119,8 @@ class RecipeVievSet(ModelViewSet):
     )
     def favorites(self, request, pk=None):
         response = FavoriteResponseGenerator(
-            obj=self.get_object(),
-            srh_obj=request.user,
+            target_item=self.get_object(),
+            container=request.user,
             queryset=self.request.user.favourites.all(),
             req_method=request.method,
         ).get_response()

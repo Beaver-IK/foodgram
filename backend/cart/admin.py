@@ -25,9 +25,9 @@ class CartAdmin(admin.ModelAdmin):
         })
     )
 
+    @admin.display(description='Количество рецептов')
     def get_recipes_count(self, obj):
         return obj.recipes.count()
-    get_recipes_count.short_description = ('Количество рецептов')
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'recipes':

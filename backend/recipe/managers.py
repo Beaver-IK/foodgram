@@ -33,23 +33,13 @@ class RecipeManager(models.Manager):
             )
             recipe.save()
 
-            recipe_ingredients = []
-
-            for value in ingredients_data:
-                ingredient_id = value.get('id')
-                amount = value.get('amount')
-                if not ingredient_id or not amount:
-                    raise ValidationError(
-                        'Для каждого ингрединта должен быть указан '
-                        'id и его количество в рецепте'
-                    )
-                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-                recipe_ingredients.append(RecipeIngredient(
+            RecipeIngredient.objects.bulk_create(
+                RecipeIngredient(
                     recipe=recipe,
-                    ingredient=ingredient,
-                    amount=amount)
-                )
-            RecipeIngredient.objects.bulk_create(recipe_ingredients)
+                    ingredient_id=values.get('id'),
+                    amount=values.get('amount')
+                ) for values in ingredients_data
+            )
 
             recipe.tags.set(tags_data)
 

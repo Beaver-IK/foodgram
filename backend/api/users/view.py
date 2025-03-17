@@ -117,8 +117,8 @@ class UsersViewSet(ModelViewSet):
         recipes_limit = request.query_params.get('recipes_limit', None)
         context = {'recipes_limit': recipes_limit, 'request': request}
         response = SubscriptionResponseGenerator(
-            obj=self.get_object(),
-            srh_obj=request.user,
+            target_item=self.get_object(),
+            container=request.user,
             queryset=request.user.subscriptions.all(),
             req_method=request.method,
             context=context

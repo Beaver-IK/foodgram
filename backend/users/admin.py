@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
+from django.utils.safestring import mark_safe
 
 from users.models import User
 
@@ -46,13 +47,13 @@ class UserAdmin(BaseUserAdmin):
 
     readonly_fields = ('date_joined', 'last_login')
 
+    @admin.display(description='Аватар')
     def avatar_thumbnail(self, obj):
         if obj.avatar:
-            return f'<img src="{obj.avatar.url}" width="50" height="50" />'
+            return mark_safe(
+                f'<img src="{obj.avatar.url}" width="50" height="50" />'
+            )
         return '-'
-
-    avatar_thumbnail.allow_tags = True
-    avatar_thumbnail.short_description = ('Avatar')
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related(

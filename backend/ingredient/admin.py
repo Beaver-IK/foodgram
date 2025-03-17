@@ -12,6 +12,6 @@ class IngredientAdmin(admin.ModelAdmin):
     save_on_top = True
     list_per_page = 20
 
+    @admin.display(description='Единица измерения')
     def measurement_unit_display(self, obj):
         return obj.get_measurement_unit_display()
-    measurement_unit_display.short_description = ('Единица измерения')

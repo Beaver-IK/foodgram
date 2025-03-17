@@ -150,10 +150,10 @@ class BaseResponseGenerator:
     RECIPE_SERIALIZER = RecipeStripSerializer
     USERSERIALIZER = ExtendUserSerializer
 
-    def __init__(self, obj, srh_obj, queryset, req_method, context=None):
+    def __init__(self, target_item, container, queryset, req_method, context=None):
 
-        self.obj = obj
-        self.srh_obj = srh_obj
+        self.target_item = target_item
+        self.container = container
         self.queryset = queryset
         self.req_method = req_method
         if context:
@@ -163,7 +163,7 @@ class BaseResponseGenerator:
     def _set_exists(self):
         """Установка флага наличия объекта базе данных."""
 
-        self.exists = self.queryset.filter(id=self.obj.id).exists()
+        self.exists = self.queryset.filter(id=self.target_item.id).exists()
 
     def _validate(self):
         """Проверка корректности запроса."""
@@ -193,18 +193,18 @@ class SubscriptionResponseGenerator(BaseResponseGenerator):
 
     def _add(self):
         """Добавление подписки."""
-        self.srh_obj.subscriptions.add(self.obj)
-        serializer = self.USERSERIALIZER(self.obj, context=self.context)
+        self.container.subscriptions.add(self.target_item)
+        serializer = self.USERSERIALIZER(self.target_item, context=self.context)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
         """Удаление подписки."""
-        self.srh_obj.subscriptions.remove(self.obj)
+        self.container.subscriptions.remove(self.target_item)
         return self.NO_CONTENT
 
     def _validate(self):
         super()._validate()
-        if self.obj == self.srh_obj:
+        if self.target_item == self.container:
             raise ValidationError('Нельзя подписаться или удалить себя')
 
 
@@ -213,13 +213,13 @@ class FavoriteResponseGenerator(BaseResponseGenerator):
 
     def _add(self):
         """Добавление рецепта в избранное."""
-        self.srh_obj.favourites.add(self.obj)
-        serializer = self.RECIPE_SERIALIZER(self.obj, context=self.context)
+        self.container.favourites.add(self.target_item)
+        serializer = self.RECIPE_SERIALIZER(self.target_item, context=self.context)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
         """Удаление рецепта из избранного."""
-        self.srh_obj.favourites.remove(self.obj)
+        self.container.favourites.remove(self.target_item)
         return self.NO_CONTENT
 
 
@@ -228,11 +228,11 @@ class CartResponseGenerator(BaseResponseGenerator):
 
     def _add(self):
         """Добавление рецепта в корзину."""
-        self.srh_obj.recipes.add(self.obj)
-        serializer = self.RECIPE_SERIALIZER(self.obj, context=self.context)
+        self.container.recipes.add(self.target_item)
+        serializer = self.RECIPE_SERIALIZER(self.target_item, context=self.context)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _delete(self):
         """Удаление рецепта из корзины."""
-        self.srh_obj.recipes.remove(self.obj)
+        self.container.recipes.remove(self.target_item)
         return self.NO_CONTENT

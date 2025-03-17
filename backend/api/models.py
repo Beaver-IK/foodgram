@@ -40,7 +40,9 @@ class RecipeShortLink(models.Model):
 
     def get_original_url(self, request):
         url = reverse('recipes-detail', kwargs={'pk': self.recipe.id})
-        return request.build_absolute_uri(url)
+        full_url = request.build_absolute_uri(url)
+        full_url = full_url.replace('/api/', '/')
+        return full_url
 
     def __str__(self):
         return f'{self.get_short_url}'

@@ -131,7 +131,7 @@ class RecipeDataValidator:
     def _image_validator(self):
         """Валидатор фотографии рецепта."""
 
-        if self.request.method == 'PATCH':
+        if self.request.method == 'PATCH' and self.image is None:
             return
         if not self.image:
             raise ValidationError(

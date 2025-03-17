@@ -13,7 +13,7 @@ class RecipeShortLinkAdmin(admin.ModelAdmin):
         'short_url_display',
         'created_at'
     )
-    search_fields = ('recipe__name', 'original_url', 'short_code')
+    search_fields = ('recipe__name', 'short_code')
     list_filter = ('created_at',)
     readonly_fields = ('short_code', 'created_at', 'short_url_display')
     fields = (

@@ -49,16 +49,16 @@ class RecipeAdmin(admin.ModelAdmin):
         })
     )
 
+    @admin.display(description='Теги')
     def get_tags(self, obj):
         return ', '.join([tag.name for tag in obj.tags.all()])
-    get_tags.short_description = 'Теги'
 
+    @admin.display(description='Миниатюра')
     def image_thumbnail(self, obj):
         if obj.image:
             return format_html(
                 '<img src="{}" width="50" height="50" />', obj.image.url)
         return '-'
-    image_thumbnail.short_description = 'Миниатюра'
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('tags', 'author')

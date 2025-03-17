@@ -23,9 +23,6 @@ class StartsWithIngredientFilter(django_filters.FilterSet):
 class RecipeFilter(django_filters.FilterSet):
     """Фильтр для рецептов."""
 
-    author = django_filters.NumberFilter(
-        field_name='author__id',
-        lookup_expr='exact')
     tags = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',

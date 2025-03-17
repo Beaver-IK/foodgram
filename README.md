@@ -2,7 +2,7 @@
 
 ![Foodgram](https://img.shields.io/badge/status-active-brightgreen) 
 ![Python](https://img.shields.io/badge/Python-3.9-blue) 
-![Django](https://img.shields.io/badge/Django-4.2-green) 
+![Django](https://img.shields.io/badge/Django-3.2-green) 
 ![React](https://img.shields.io/badge/React-18-blue) 
 ![Docker](https://img.shields.io/badge/Docker-20.10-blue) 
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-blue)
